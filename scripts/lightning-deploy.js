@@ -1,7 +1,7 @@
 const hre = require('hardhat');
 
 async function main() {
-  const LightningProtocol = await hre.ethers.getContractFactory("LightningProtocol");
+  const LightningProtocol = await hre.ethers.getContractFactory("InfinityProtocol");
   const lightningProtocol = await LightningProtocol.deploy();
 
   await lightningProtocol.deployed();
