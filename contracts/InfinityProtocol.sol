@@ -18,6 +18,7 @@ contract InfinityProtocol is Context, IBEP20, Ownable {
     mapping (address => bool) private _isExcluded;
     address[] private _excluded;
     address public feeReceiver;
+    address public router;
 
     string  private constant _NAME = "Infinity";
     string  private constant _SYMBOL = "INFINITY";
@@ -44,8 +45,9 @@ contract InfinityProtocol is Context, IBEP20, Ownable {
 
     uint private constant _MAX_TX_SIZE = 100000000 * _DECIMALFACTOR;
 
-    constructor () public {
+    constructor (address _router) public {
         _rOwned[_msgSender()] = _rTotal;
+        router = _router;
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
 
@@ -141,6 +143,7 @@ contract InfinityProtocol is Context, IBEP20, Ownable {
 
     function excludeAccount(address account) external onlyOwner() {
         require(!_isExcluded[account], "Account is already excluded");
+        require(account != router, 'Not allowed to exclude router');
         require(account != feeReceiver, "Can not exclude fee receiver");
         if (_rOwned[account] > 0) {
             _tOwned[account] = tokenFromReflection(_rOwned[account]);
@@ -182,6 +185,7 @@ contract InfinityProtocol is Context, IBEP20, Ownable {
         if (sender != owner() && recipient != owner())
             require(amount <= _MAX_TX_SIZE, "Transfer amount exceeds the maxTxAmount.");
 
+        // @dev 50% fee is burn fee, 50% is fot
         if (_BURN_FEE >= 250) {
 
             _tTradeCycle = _tTradeCycle.add(amount);
