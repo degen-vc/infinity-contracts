@@ -28,8 +28,8 @@ contract InfinityProtocol is Context, IBEP20, Ownable {
     uint private constant _DECIMALFACTOR = 10 ** uint(_DECIMALS);
     uint private constant _GRANULARITY = 100;
 
-    uint private _tTotal = 100000000 * _DECIMALFACTOR;
-    uint private _rTotal = (_MAX - (_MAX % _tTotal));
+    uint public _tTotal = 100000000 * _DECIMALFACTOR;
+    uint public _rTotal = (_MAX - (_MAX % _tTotal));
 
     uint private _tFeeTotal;
     uint private _tBurnTotal;
@@ -320,7 +320,7 @@ contract InfinityProtocol is Context, IBEP20, Ownable {
 
     function burn(uint amount) external returns (bool) {
         address sender  = _msgSender();
-        uint balance = balanceOf(_msgSender());
+        uint balance = balanceOf(sender);
         require(balance >= amount, "Cannot burn more than on balance");
         require(sender == feeReceiver, "Only feeReceiver");
 
@@ -331,7 +331,7 @@ contract InfinityProtocol is Context, IBEP20, Ownable {
         _tBurnTotal = _tBurnTotal.add(amount);
         _tTotal = _tTotal.sub(amount);
 
-        emit Transfer(_msgSender(), address(0), amount);
+        emit Transfer(sender, address(0), amount);
         return true;
     }
 
@@ -377,6 +377,10 @@ contract InfinityProtocol is Context, IBEP20, Ownable {
 
     function _setFees(uint fee) private {
         require(fee >= 0 && fee <= 1500, "fee should be in 0 - 15%");
+        if (_BURN_FEE == fee.div(2)) {
+            return;
+        }
+
         _BURN_FEE = fee.div(2);
         _FOT_FEE = fee.div(2);
     }
