@@ -185,7 +185,7 @@ const { BigNumber } = require('ethers');
     });
 
 
-    it.only('should be possible reach 15 trade cycles, fees auto set to 12%, 6% - to burn and 6% fot, after additional 1.000.001 tokens traded fee is the same', async function() {
+    it('should be possible reach 15 trade cycles, fees auto set to 12%, 6% - to burn and 6% fot, after additional 1.000.001 tokens traded fee is the same', async function() {
       const fee = bn(500);
       const partFee = bn(250);
 
