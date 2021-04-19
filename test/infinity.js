@@ -19,7 +19,7 @@ const { BigNumber } = require('ethers');
     let feeReceiver;
     let userTwo;
 
-    before('setup others', async function() {
+    beforeEach('setup others', async function() {
       accounts = await ethers.getSigners();
       owner = accounts[0];
       user = accounts[1];
