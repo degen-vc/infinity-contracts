@@ -1,6 +1,6 @@
 const Ganache = require('./helpers/ganache');
 const assert = require('assert');
-const { BigNumber } = require('ethers');
+const { BigNumber, utils } = require('ethers');
 const { expect } = require('chai');
 
   describe('InfinityProtocol', function() {
@@ -9,8 +9,8 @@ const { expect } = require('chai');
 
     const router = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
     const ganache = new Ganache();
-    const baseUnit = bn('1000000000000000000');
-    const totalSupply = bn('100000000').mul(baseUnit);
+    const baseUnit = 18;
+    const totalSupply = utils.parseUnits('100000000', baseUnit);
     const HUNDRED_PERCENT = bn('10000');
 
     let accounts;
@@ -57,7 +57,7 @@ const { expect } = require('chai');
     });
 
     it('should be possible to transfer tokens, fees are not set', async function() {
-      const amount = bn('100').mul(baseUnit);
+      const amount = utils.parseUnits('100', baseUnit);
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
       assertBNequal(await infinity.balanceOf(user.address), 0);
 
@@ -79,7 +79,7 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getFee(), partFee);
 
       await infinity.setFeeReceiver(feeReceiver.address);
-      const amount = bn('100').mul(baseUnit);
+      const amount = utils.parseUnits('100', baseUnit);
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
       assertBNequal(await infinity.balanceOf(user.address), 0);
       assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
@@ -115,7 +115,7 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getFee(), partFee);
 
       await infinity.setFeeReceiver(feeReceiver.address);
-      const amount = bn('100').mul(baseUnit);
+      const amount = utils.parseUnits('100', baseUnit);
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
       assertBNequal(await infinity.balanceOf(user.address), 0);
       assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
@@ -150,7 +150,7 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getFee(), partFee);
 
       await infinity.setFeeReceiver(feeReceiver.address);
-      let amount = bn('999999').mul(baseUnit);
+      let amount = utils.parseUnits('999999', baseUnit);
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
       assertBNequal(await infinity.balanceOf(user.address), 0);
       assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
@@ -177,7 +177,7 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getFee(), partFee);
 
       // cycle reached
-      amount = bn('1').mul(baseUnit);
+      amount = utils.parseUnits('1', baseUnit);
       await infinity.connect(user).transfer(userTwo.address, amount);
 
       const increasedPartFee = bn(275);
@@ -196,7 +196,7 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getFee(), partFee);
 
       await infinity.setFeeReceiver(feeReceiver.address);
-      let amount = bn('1000001').mul(baseUnit);
+      let amount = utils.parseUnits('1000001', baseUnit);
       let fee = 250;
 
       await infinity.transfer(user.address, amount);
@@ -271,19 +271,19 @@ const { expect } = require('chai');
 
 
       assertBNequal(await infinity.getCycle(), 0);
-      amount = bn('416656').mul(baseUnit);
+      amount = utils.parseUnits('416656', baseUnit);
       await infinity.transfer(user.address, amount);
       assertBNequal(await infinity.getBurnFee(), fee);
       assertBNequal(await infinity.getFee(), fee);
 
 
       const supplyBeforeRebase = await infinity.totalSupply();
-      amount = bn('100000').mul(baseUnit);
+      amount = utils.parseUnits('100000', baseUnit);
       await infinity.transfer(user.address, amount);
 
       const supplyAfterRebase = await infinity.totalSupply();
 
-      const rebaseAmount = bn(637500).mul(baseUnit);
+      const rebaseAmount = utils.parseUnits('637500', baseUnit);
       const totalSupplyExpected = supplyBeforeRebase.add(rebaseAmount).sub(amount.mul(fee).div(HUNDRED_PERCENT))
       assertBNequal(supplyAfterRebase, totalSupplyExpected);
 
@@ -309,7 +309,7 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getFee(), partFee);
 
       await infinity.setFeeReceiver(feeReceiver.address);
-      let amount = bn('50000').mul(baseUnit);
+      let amount = utils.parseUnits('50000', baseUnit);
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
       assertBNequal(await infinity.balanceOf(user.address), 0);
       assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
@@ -356,7 +356,7 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getFee(), partFee);
 
       await infinity.setFeeReceiver(feeReceiver.address);
-      let amount = bn('50000').mul(baseUnit);
+      let amount = utils.parseUnits('50000', baseUnit);
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
       assertBNequal(await infinity.balanceOf(user.address), 0);
       assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
@@ -398,7 +398,7 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getFee(), partFee);
 
       await infinity.setFeeReceiver(feeReceiver.address);
-      let amount = bn('50000').mul(baseUnit);
+      let amount = utils.parseUnits('50000', baseUnit);
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
       assertBNequal(await infinity.balanceOf(user.address), 0);
       assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
@@ -440,7 +440,7 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getFee(), partFee);
 
       await infinity.setFeeReceiver(feeReceiver.address);
-      const amount = bn('100').mul(baseUnit);
+      const amount = utils.parseUnits('100', baseUnit);
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
       assertBNequal(await infinity.balanceOf(user.address), 0);
       assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
@@ -474,7 +474,7 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getFee(), partFee);
 
       await infinity.setFeeReceiver(feeReceiver.address);
-      let amount = bn('1000001').mul(baseUnit);
+      let amount = utils.parseUnits('1000001', baseUnit);
       let fee = 250;
 
       await infinity.transfer(user.address, amount);
@@ -542,7 +542,7 @@ const { expect } = require('chai');
       let totalFeesBeforeBurn = await infinity.totalFees();
       let totalBurnWithFeesBeforeBurn = await infinity.totalBurnWithFees();
       let feeReceiverBalance = await infinity.balanceOf(feeReceiver.address);
-      let amountToBurn = bn('500').mul(baseUnit);
+      let amountToBurn = utils.parseUnits('500', baseUnit);
       await infinity.connect(feeReceiver).burn(amountToBurn);
 
       assertBNequal(await infinity.balanceOf(feeReceiver.address), feeReceiverBalance.sub(amountToBurn));
@@ -566,7 +566,7 @@ const { expect } = require('chai');
 
 
       assertBNequal(await infinity.getCycle(), 0);
-      amount = bn('416656').mul(baseUnit);
+      amount = utils.parseUnits('416656', baseUnit);
       await infinity.transfer(user.address, amount);
       assertBNequal(await infinity.getBurnFee(), fee);
       assertBNequal(await infinity.getFee(), fee);
@@ -576,7 +576,7 @@ const { expect } = require('chai');
       totalFeesBeforeBurn = await infinity.totalFees();
       totalBurnWithFeesBeforeBurn = await infinity.totalBurnWithFees();
       feeReceiverBalance = await infinity.balanceOf(feeReceiver.address);
-      amountToBurn = bn('10000').mul(baseUnit);
+      amountToBurn = utils.parseUnits('10000', baseUnit);
       await infinity.connect(feeReceiver).burn(amountToBurn);
 
       assertBNequal(await infinity.balanceOf(feeReceiver.address), feeReceiverBalance.sub(amountToBurn));
@@ -586,12 +586,12 @@ const { expect } = require('chai');
       assertBNequal(await infinity.totalFees(), totalFeesBeforeBurn);
 
       const supplyBeforeRebase = supplyBeforeBurn.sub(amountToBurn);
-      amount = bn('100000').mul(baseUnit);
+      amount = utils.parseUnits('100000', baseUnit);
       await infinity.transfer(user.address, amount);
 
       const supplyAfterRebase = await infinity.totalSupply();
 
-      const rebaseAmount = bn(637500).mul(baseUnit);
+      const rebaseAmount = utils.parseUnits('637500', baseUnit);
       const totalSupplyExpected = supplyBeforeRebase.add(rebaseAmount).sub(amount.mul(fee).div(HUNDRED_PERCENT))
       assertBNequal(supplyAfterRebase, totalSupplyExpected);
 

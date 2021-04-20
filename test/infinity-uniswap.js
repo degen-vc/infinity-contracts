@@ -10,7 +10,8 @@ describe('InfinityProtocol Uniswap', function() {
   const assertBNequal = (bnOne, bnTwo) => assert.strictEqual(bnOne.toString(), bnTwo.toString());
 
   const ganache = new Ganache();
-  const totalSupply = utils.parseUnits('100000000', 8);
+  const baseUnit = 18;
+  const totalSupply = utils.parseUnits('100000000', baseUnit);
 
   let accounts;
   let infinity;
@@ -56,7 +57,7 @@ describe('InfinityProtocol Uniswap', function() {
   });
 
   it('should be able to top up ETH/INFINITY pair with the liquidity with 0% fees', async function() {
-    const liquidityInfinityAmount = utils.parseUnits('10000', 8);
+    const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
     const liquidityETHAmount = utils.parseEther('10');
 
     const { _reserve0: reserve0Before, _reserve1: reserve1Before } = await uniswapPair.getReserves();
@@ -85,7 +86,7 @@ describe('InfinityProtocol Uniswap', function() {
   });
 
   it('should be able to do swap ETH for INFINITY with 0% fees', async function() {
-    const liquidityInfinityAmount = utils.parseUnits('10000', 8);
+    const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
     const liquidityETHAmount = utils.parseEther('10');
 
     assertBNequal(await infinity.getBurnFee(), 0);
@@ -112,13 +113,13 @@ describe('InfinityProtocol Uniswap', function() {
       { value: utils.parseEther('1') }
     )).to.emit(uniswapPair, 'Swap');
 
-    assertBNequal(await infinity.balanceOf(user.address), '90661089388');
+    assertBNequal(await infinity.balanceOf(user.address), '906610893880149131581');
   });
 
   it('should be able to do swap INFINITY for ETH with 0% fees', async function() {
-    const liquidityInfinityAmount = utils.parseUnits('10000', 8);
+    const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
     const liquidityETHAmount = utils.parseEther('10');
-    const amountToSwap = utils.parseUnits('100', 8);
+    const amountToSwap = utils.parseUnits('100', baseUnit);
 
     assertBNequal(await infinity.getBurnFee(), 0);
     assertBNequal(await infinity.getFee(), 0);
@@ -147,11 +148,11 @@ describe('InfinityProtocol Uniswap', function() {
       new Date().getTime() + 3000
     )).to.emit(uniswapPair, 'Swap');
 
-    assertBNequal(await ethers.provider.getBalance(user.address), balanceBefore.add('96926059439706129'));
+    assertBNequal(await ethers.provider.getBalance(user.address), balanceBefore.add('96925483439706129'));
   });
 
   it('should be able to top up ETH/INFINITY pair with the liquidity with 5% fees', async function() {
-    const liquidityInfinityAmount = utils.parseUnits('10000', 8);
+    const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
     const liquidityETHAmount = utils.parseEther('10');
 
     assertBNequal(await infinity.getBurnFee(), 0);
@@ -186,7 +187,7 @@ describe('InfinityProtocol Uniswap', function() {
   });
 
   it('should be able to do swap ETH for INFINITY with 5% fees', async function() {
-    const liquidityInfinityAmount = utils.parseUnits('10000', 8);
+    const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
     const liquidityETHAmount = utils.parseEther('10');
 
     assertBNequal(await infinity.getBurnFee(), 0);
@@ -222,13 +223,13 @@ describe('InfinityProtocol Uniswap', function() {
       { value: utils.parseEther('1') }
     )).to.emit(uniswapPair, 'Swap');
 
-    assertBNequal(await infinity.balanceOf(user.address), '81821633174');
+    assertBNequal(await infinity.balanceOf(user.address), '818216331726834591252');
   });
 
   it('should be able to do swap INFINITY for ETH with 5% fees', async function() {
-    const liquidityInfinityAmount = utils.parseUnits('10000', 8);
+    const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
     const liquidityETHAmount = utils.parseEther('10');
-    const amountToSwap = utils.parseUnits('100', 8);
+    const amountToSwap = utils.parseUnits('100', baseUnit);
 
     assertBNequal(await infinity.getBurnFee(), 0);
     assertBNequal(await infinity.getFee(), 0);
@@ -267,6 +268,6 @@ describe('InfinityProtocol Uniswap', function() {
       new Date().getTime() + 3000
     )).to.emit(uniswapPair, 'Swap');
 
-    assertBNequal(await ethers.provider.getBalance(user.address), balanceBefore.add('91763667972494518'));
+    assertBNequal(await ethers.provider.getBalance(user.address), balanceBefore.add('91763091972494518'));
   });
 });
