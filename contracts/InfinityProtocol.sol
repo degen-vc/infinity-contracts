@@ -4,9 +4,9 @@ import "@openzeppelin/contracts/GSN/Context.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "./IERC20.sol";
+import "./IInfinityProtocol.sol";
 
-contract InfinityProtocol is Context, IERC20, Ownable {
+contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
 
     using SafeMath for uint;
     using Address for address;
@@ -318,7 +318,7 @@ contract InfinityProtocol is Context, IERC20, Ownable {
         }
     }
 
-    function burn(uint amount) external returns (bool) {
+    function burn(uint amount) external override returns (bool) {
         address sender  = _msgSender();
         uint balance = balanceOf(sender);
         require(balance >= amount, "Cannot burn more than on balance");
