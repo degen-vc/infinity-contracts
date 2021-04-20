@@ -9,7 +9,7 @@ const { expect } = require('chai');
 
     const router = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
     const ganache = new Ganache();
-    const baseUnit = 18;
+    const baseUnit = 8;
     const totalSupply = utils.parseUnits('100000000', baseUnit);
     const HUNDRED_PERCENT = bn('10000');
 
@@ -290,7 +290,7 @@ const { expect } = require('chai');
       const balanceOwner = await infinity.balanceOf(owner.address);
       const balanceUser = await infinity.balanceOf(user.address);
       const balanceFeeReceiver = await infinity.balanceOf(feeReceiver.address);
-      assertBNequal(balanceOwner.add(balanceUser).add(balanceFeeReceiver), totalSupplyExpected.sub(2));
+      assertBNequal(balanceOwner.add(balanceUser).add(balanceFeeReceiver), totalSupplyExpected.sub(1));
 
       fee = 250;
       assertBNequal(await infinity.getBurnFee(), fee);

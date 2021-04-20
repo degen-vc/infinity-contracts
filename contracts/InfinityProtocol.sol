@@ -22,7 +22,7 @@ contract InfinityProtocol is Context, IERC20, Ownable {
 
     string  private constant _NAME = "Infinity";
     string  private constant _SYMBOL = "INFINITY";
-    uint8   private constant _DECIMALS = 18;
+    uint8   private constant _DECIMALS = 8;
 
     uint private constant _MAX = ~uint(0);
     uint private constant _DECIMALFACTOR = 10 ** uint(_DECIMALS);
