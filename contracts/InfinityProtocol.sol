@@ -1,12 +1,12 @@
-pragma solidity ^0.6.0;
+pragma solidity 0.7.4;
 
 import "@openzeppelin/contracts/GSN/Context.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "./IBEP20.sol";
+import "./IERC20.sol";
 
-contract InfinityProtocol is Context, IBEP20, Ownable {
+contract InfinityProtocol is Context, IERC20, Ownable {
 
     using SafeMath for uint;
     using Address for address;
@@ -88,7 +88,7 @@ contract InfinityProtocol is Context, IBEP20, Ownable {
 
     function transferFrom(address sender, address recipient, uint amount) public override returns (bool) {
         _transfer(sender, recipient, amount);
-        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "BEP20: transfer amount exceeds allowance"));
+        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
         return true;
     }
 
@@ -98,7 +98,7 @@ contract InfinityProtocol is Context, IBEP20, Ownable {
     }
 
     function decreaseAllowance(address spender, uint subtractedValue) public virtual returns (bool) {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "BEP20: decreased allowance below zero"));
+        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
         return true;
     }
 
@@ -137,7 +137,7 @@ contract InfinityProtocol is Context, IBEP20, Ownable {
 
     function tokenFromReflection(uint rAmount) public view returns(uint) {
         require(rAmount <= _rTotal, "Amount must be less than total reflections");
-        uint currentRate =  _getRate();
+        uint currentRate = _getRate();
         return rAmount.div(currentRate);
     }
 
@@ -153,7 +153,7 @@ contract InfinityProtocol is Context, IBEP20, Ownable {
     }
 
     function includeAccount(address account) external onlyOwner() {
-        require(_isExcluded[account], "Account is already excluded");
+        require(_isExcluded[account], "Account is already included");
         for (uint i = 0; i < _excluded.length; i++) {
             if (_excluded[i] == account) {
                 _excluded[i] = _excluded[_excluded.length - 1];
@@ -166,16 +166,16 @@ contract InfinityProtocol is Context, IBEP20, Ownable {
     }
 
     function _approve(address owner, address spender, uint amount) private {
-        require(owner != address(0), "BEP20: approve from the zero address");
-        require(spender != address(0), "BEP20: approve to the zero address");
+        require(owner != address(0), "ERC20: approve from the zero address");
+        require(spender != address(0), "ERC20: approve to the zero address");
 
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
 
     function _transfer(address sender, address recipient, uint amount) private {
-        require(sender != address(0), "BEP20: transfer from the zero address");
-        require(recipient != address(0), "BEP20: transfer to the zero address");
+        require(sender != address(0), "ERC20: transfer from the zero address");
+        require(recipient != address(0), "ERC20: transfer to the zero address");
         require(amount > 0, "Transfer amount must be greater than zero");
 
         // @dev once all cycles are completed, burn fee will be set to 0 and the protocol

@@ -10,7 +10,8 @@ describe('InfinityProtocol Uniswap', function() {
   const assertBNequal = (bnOne, bnTwo) => assert.strictEqual(bnOne.toString(), bnTwo.toString());
 
   const ganache = new Ganache();
-  const totalSupply = utils.parseUnits('100000000', 8);
+  const baseUnit = 8;
+  const totalSupply = utils.parseUnits('100000000', baseUnit);
 
   let accounts;
   let infinity;
@@ -56,7 +57,7 @@ describe('InfinityProtocol Uniswap', function() {
   });
 
   it('should be able to top up ETH/INFINITY pair with the liquidity with 0% fees', async function() {
-    const liquidityInfinityAmount = utils.parseUnits('10000', 8);
+    const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
     const liquidityETHAmount = utils.parseEther('10');
 
     const { _reserve0: reserve0Before, _reserve1: reserve1Before } = await uniswapPair.getReserves();
@@ -85,7 +86,7 @@ describe('InfinityProtocol Uniswap', function() {
   });
 
   it('should be able to do swap ETH for INFINITY with 0% fees', async function() {
-    const liquidityInfinityAmount = utils.parseUnits('10000', 8);
+    const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
     const liquidityETHAmount = utils.parseEther('10');
 
     assertBNequal(await infinity.getBurnFee(), 0);
@@ -116,9 +117,9 @@ describe('InfinityProtocol Uniswap', function() {
   });
 
   it('should be able to do swap INFINITY for ETH with 0% fees', async function() {
-    const liquidityInfinityAmount = utils.parseUnits('10000', 8);
+    const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
     const liquidityETHAmount = utils.parseEther('10');
-    const amountToSwap = utils.parseUnits('100', 8);
+    const amountToSwap = utils.parseUnits('100', baseUnit);
 
     assertBNequal(await infinity.getBurnFee(), 0);
     assertBNequal(await infinity.getFee(), 0);
@@ -151,7 +152,7 @@ describe('InfinityProtocol Uniswap', function() {
   });
 
   it('should be able to top up ETH/INFINITY pair with the liquidity with 5% fees', async function() {
-    const liquidityInfinityAmount = utils.parseUnits('10000', 8);
+    const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
     const liquidityETHAmount = utils.parseEther('10');
 
     assertBNequal(await infinity.getBurnFee(), 0);
@@ -186,7 +187,7 @@ describe('InfinityProtocol Uniswap', function() {
   });
 
   it('should be able to do swap ETH for INFINITY with 5% fees', async function() {
-    const liquidityInfinityAmount = utils.parseUnits('10000', 8);
+    const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
     const liquidityETHAmount = utils.parseEther('10');
 
     assertBNequal(await infinity.getBurnFee(), 0);
@@ -226,9 +227,9 @@ describe('InfinityProtocol Uniswap', function() {
   });
 
   it('should be able to do swap INFINITY for ETH with 5% fees', async function() {
-    const liquidityInfinityAmount = utils.parseUnits('10000', 8);
+    const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
     const liquidityETHAmount = utils.parseEther('10');
-    const amountToSwap = utils.parseUnits('100', 8);
+    const amountToSwap = utils.parseUnits('100', baseUnit);
 
     assertBNequal(await infinity.getBurnFee(), 0);
     assertBNequal(await infinity.getFee(), 0);

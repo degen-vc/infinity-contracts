@@ -1,6 +1,7 @@
 const Ganache = require('./helpers/ganache');
 const assert = require('assert');
-const { BigNumber } = require('ethers');
+const { BigNumber, utils } = require('ethers');
+const { expect } = require('chai');
 
   describe('InfinityProtocol', function() {
     const bn = (input) => BigNumber.from(input);
@@ -8,8 +9,8 @@ const { BigNumber } = require('ethers');
 
     const router = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
     const ganache = new Ganache();
-    const baseUnit = bn('100000000');
-    const totalSupply = bn('100000000').mul(baseUnit);
+    const baseUnit = 8;
+    const totalSupply = utils.parseUnits('100000000', baseUnit);
     const HUNDRED_PERCENT = bn('10000');
 
     let accounts;
@@ -56,7 +57,7 @@ const { BigNumber } = require('ethers');
     });
 
     it('should be possible to transfer tokens, fees are not set', async function() {
-      const amount = bn('100').mul(baseUnit);
+      const amount = utils.parseUnits('100', baseUnit);
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
       assertBNequal(await infinity.balanceOf(user.address), 0);
 
@@ -78,7 +79,7 @@ const { BigNumber } = require('ethers');
       assertBNequal(await infinity.getFee(), partFee);
 
       await infinity.setFeeReceiver(feeReceiver.address);
-      const amount = bn('100').mul(baseUnit);
+      const amount = utils.parseUnits('100', baseUnit);
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
       assertBNequal(await infinity.balanceOf(user.address), 0);
       assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
@@ -114,7 +115,7 @@ const { BigNumber } = require('ethers');
       assertBNequal(await infinity.getFee(), partFee);
 
       await infinity.setFeeReceiver(feeReceiver.address);
-      const amount = bn('100').mul(baseUnit);
+      const amount = utils.parseUnits('100', baseUnit);
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
       assertBNequal(await infinity.balanceOf(user.address), 0);
       assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
@@ -149,7 +150,7 @@ const { BigNumber } = require('ethers');
       assertBNequal(await infinity.getFee(), partFee);
 
       await infinity.setFeeReceiver(feeReceiver.address);
-      let amount = bn('999999').mul(baseUnit);
+      let amount = utils.parseUnits('999999', baseUnit);
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
       assertBNequal(await infinity.balanceOf(user.address), 0);
       assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
@@ -176,7 +177,7 @@ const { BigNumber } = require('ethers');
       assertBNequal(await infinity.getFee(), partFee);
 
       // cycle reached
-      amount = bn('1').mul(baseUnit);
+      amount = utils.parseUnits('1', baseUnit);
       await infinity.connect(user).transfer(userTwo.address, amount);
 
       const increasedPartFee = bn(275);
@@ -184,8 +185,120 @@ const { BigNumber } = require('ethers');
       assertBNequal(await infinity.getFee(), increasedPartFee);
     });
 
+    it('should be possible reach 15 trade cycles, fees auto set to 12%, 6% - to burn and 6% fot, check total supply after rebase', async function() {
+      const feeStart = bn(500);
+      const partFee = bn(250);
 
-    it('should be possible reach 15 trade cycles, fees auto set to 12%, 6% - to burn and 6% fot, after additional 1.000.001 tokens traded fee is the same', async function() {
+      assertBNequal(await infinity.getBurnFee(), 0);
+      assertBNequal(await infinity.getFee(), 0);
+      await infinity.setFee(feeStart);
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
+
+      await infinity.setFeeReceiver(feeReceiver.address);
+      let amount = utils.parseUnits('1000001', baseUnit);
+      let fee = 250;
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+
+      assertBNequal(await infinity.getCycle(), 0);
+      amount = utils.parseUnits('416656', baseUnit);
+      await infinity.transfer(user.address, amount);
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+
+      const supplyBeforeRebase = await infinity.totalSupply();
+      amount = utils.parseUnits('100000', baseUnit);
+      await infinity.transfer(user.address, amount);
+
+      const supplyAfterRebase = await infinity.totalSupply();
+
+      const rebaseAmount = utils.parseUnits('637500', baseUnit);
+      const totalSupplyExpected = supplyBeforeRebase.add(rebaseAmount).sub(amount.mul(fee).div(HUNDRED_PERCENT))
+      assertBNequal(supplyAfterRebase, totalSupplyExpected);
+
+      const balanceOwner = await infinity.balanceOf(owner.address);
+      const balanceUser = await infinity.balanceOf(user.address);
+      const balanceFeeReceiver = await infinity.balanceOf(feeReceiver.address);
+      assertBNequal(balanceOwner.add(balanceUser).add(balanceFeeReceiver), totalSupplyExpected.sub(1));
+
+      fee = 250;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+      assertBNequal(await infinity.getCycle(), 1);
+    });
+
+    it('should be possible to make an admin burn for feeReceiver without trade cycles', async function() {
       const fee = bn(500);
       const partFee = bn(250);
 
@@ -196,7 +309,7 @@ const { BigNumber } = require('ethers');
       assertBNequal(await infinity.getFee(), partFee);
 
       await infinity.setFeeReceiver(feeReceiver.address);
-      let amount = bn('999999').mul(baseUnit);
+      let amount = utils.parseUnits('50000', baseUnit);
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
       assertBNequal(await infinity.balanceOf(user.address), 0);
       assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
@@ -213,27 +326,289 @@ const { BigNumber } = require('ethers');
       assertBNequal(await infinity.getTradedCycle(), amount);
       assertBNequal(await infinity.totalBurn(), amount.mul(partFee).div(HUNDRED_PERCENT));
 
+
+      const feeReceiverBalance = amount.mul(partFee).div(HUNDRED_PERCENT);
+
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply.sub(amount));
       assertBNequal(await infinity.balanceOf(user.address), amount.sub(amount.mul(fee).div(HUNDRED_PERCENT)));
-      assertBNequal(await infinity.balanceOf(feeReceiver.address), amount.mul(partFee).div(HUNDRED_PERCENT));
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), feeReceiverBalance);
 
       assertBNequal(await infinity.totalSupply(), totalSupply.sub(amount.mul(partFee).div(HUNDRED_PERCENT)));
 
       assertBNequal(await infinity.getBurnFee(), partFee);
       assertBNequal(await infinity.getFee(), partFee);
 
-      // cycle reached
-      amount = bn('1').mul(baseUnit);
-      await infinity.connect(user).transfer(userTwo.address, amount);
+      await expect(infinity.connect(feeReceiver).burn(feeReceiverBalance)).to.emit(infinity, 'Transfer');
 
-      const increasedPartFee = bn(275);
-      assertBNequal(await infinity.getBurnFee(), increasedPartFee);
-      assertBNequal(await infinity.getFee(), increasedPartFee);
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
+      assertBNequal(await infinity.totalSupply(), totalSupply.sub(amount.mul(partFee).div(HUNDRED_PERCENT)).sub(feeReceiverBalance));
+      assertBNequal(await infinity.totalBurn(), amount.mul(partFee).div(HUNDRED_PERCENT).add(feeReceiverBalance));
     });
 
-    // set fee to 5 percent and make burns without trade cycles
-    // set fee to 5 percent and make all trade cycles with needed checks and burn with rebase WITH admin burns, check latest total supply
-    // test all 156 cycles
+    it('should NOT be possible to make an admin burn for NOT feeReceiver without trade cycles.', async function() {
+      const fee = bn(500);
+      const partFee = bn(250);
+
+      assertBNequal(await infinity.getBurnFee(), 0);
+      assertBNequal(await infinity.getFee(), 0);
+      await infinity.setFee(fee);
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
+
+      await infinity.setFeeReceiver(feeReceiver.address);
+      let amount = utils.parseUnits('50000', baseUnit);
+      assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
+      assertBNequal(await infinity.balanceOf(user.address), 0);
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
+
+      assertBNequal(await infinity.getCycle(), 0);
+      assertBNequal(await infinity.getBurnCycle(), 0);
+      assertBNequal(await infinity.getTradedCycle(), 0);
+      assertBNequal(await infinity.totalBurn(), 0);
+
+      await infinity.transfer(user.address, amount);
+
+      assertBNequal(await infinity.getCycle(), 0);
+      assertBNequal(await infinity.getBurnCycle(), amount.mul(fee).div(HUNDRED_PERCENT));
+      assertBNequal(await infinity.getTradedCycle(), amount);
+      assertBNequal(await infinity.totalBurn(), amount.mul(partFee).div(HUNDRED_PERCENT));
+
+      const feeReceiverBalance = amount.mul(partFee).div(HUNDRED_PERCENT);
+
+      assertBNequal(await infinity.balanceOf(owner.address), totalSupply.sub(amount));
+      assertBNequal(await infinity.balanceOf(user.address), amount.sub(amount.mul(fee).div(HUNDRED_PERCENT)));
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), feeReceiverBalance);
+
+      assertBNequal(await infinity.totalSupply(), totalSupply.sub(amount.mul(partFee).div(HUNDRED_PERCENT)));
+
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
+
+      await expect(infinity.connect(user).burn(feeReceiverBalance)).to.revertedWith('Only feeReceiver');
+    });
+
+    it('should NOT be possible to make an admin burn for feeReceiver does not have amount tokens.', async function() {
+      const fee = bn(500);
+      const partFee = bn(250);
+
+      assertBNequal(await infinity.getBurnFee(), 0);
+      assertBNequal(await infinity.getFee(), 0);
+      await infinity.setFee(fee);
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
+
+      await infinity.setFeeReceiver(feeReceiver.address);
+      let amount = utils.parseUnits('50000', baseUnit);
+      assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
+      assertBNequal(await infinity.balanceOf(user.address), 0);
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
+
+      assertBNequal(await infinity.getCycle(), 0);
+      assertBNequal(await infinity.getBurnCycle(), 0);
+      assertBNequal(await infinity.getTradedCycle(), 0);
+      assertBNequal(await infinity.totalBurn(), 0);
+
+      await infinity.transfer(user.address, amount);
+
+      assertBNequal(await infinity.getCycle(), 0);
+      assertBNequal(await infinity.getBurnCycle(), amount.mul(fee).div(HUNDRED_PERCENT));
+      assertBNequal(await infinity.getTradedCycle(), amount);
+      assertBNequal(await infinity.totalBurn(), amount.mul(partFee).div(HUNDRED_PERCENT));
+
+      const feeReceiverBalance = amount.mul(partFee).div(HUNDRED_PERCENT);
+
+      assertBNequal(await infinity.balanceOf(owner.address), totalSupply.sub(amount));
+      assertBNequal(await infinity.balanceOf(user.address), amount.sub(amount.mul(fee).div(HUNDRED_PERCENT)));
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), feeReceiverBalance);
+
+      assertBNequal(await infinity.totalSupply(), totalSupply.sub(amount.mul(partFee).div(HUNDRED_PERCENT)));
+
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
+
+      await expect(infinity.connect(feeReceiver).burn(feeReceiverBalance.add(1))).to.revertedWith('Cannot burn more than on balance');
+    });
+
+    it('transfer to same user should not multiply user balance / total supply', async function() {
+      const fee = bn(500);
+      const partFee = bn(250);
+
+      assertBNequal(await infinity.getBurnFee(), 0);
+      assertBNequal(await infinity.getFee(), 0);
+      await infinity.setFee(fee);
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
+
+      await infinity.setFeeReceiver(feeReceiver.address);
+      const amount = utils.parseUnits('100', baseUnit);
+      assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
+      assertBNequal(await infinity.balanceOf(user.address), 0);
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
+
+      assertBNequal(await infinity.getCycle(), 0);
+      assertBNequal(await infinity.getBurnCycle(), 0);
+      assertBNequal(await infinity.getTradedCycle(), 0);
+      assertBNequal(await infinity.totalBurn(), 0);
+
+      await infinity.transfer(owner.address, amount);
+
+      assertBNequal(await infinity.getCycle(), 0);
+      assertBNequal(await infinity.getBurnCycle(), amount.mul(fee).div(HUNDRED_PERCENT));
+      assertBNequal(await infinity.getTradedCycle(), amount);
+      assertBNequal(await infinity.totalBurn(), amount.mul(partFee).div(HUNDRED_PERCENT));
+
+      assertBNequal(await infinity.balanceOf(owner.address), totalSupply.sub(amount.mul(fee).div(HUNDRED_PERCENT)));
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), amount.mul(partFee).div(HUNDRED_PERCENT));
+
+      assertBNequal(await infinity.totalSupply(), totalSupply.sub(amount.mul(partFee).div(HUNDRED_PERCENT)));
+    });
+
+    it('should be possible reach 15 trade cycles with needed checks and burn with rebase WITH admin burns, check latest total supply', async function() {
+      const feeStart = bn(500);
+      const partFee = bn(250);
+
+      assertBNequal(await infinity.getBurnFee(), 0);
+      assertBNequal(await infinity.getFee(), 0);
+      await infinity.setFee(feeStart);
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
+
+      await infinity.setFeeReceiver(feeReceiver.address);
+      let amount = utils.parseUnits('1000001', baseUnit);
+      let fee = 250;
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      let supplyBeforeBurn = await infinity.totalSupply();
+      let totalBurnBeforeBurn = await infinity.totalBurn();
+      let totalFeesBeforeBurn = await infinity.totalFees();
+      let totalBurnWithFeesBeforeBurn = await infinity.totalBurnWithFees();
+      let feeReceiverBalance = await infinity.balanceOf(feeReceiver.address);
+      let amountToBurn = utils.parseUnits('500', baseUnit);
+      await infinity.connect(feeReceiver).burn(amountToBurn);
+
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), feeReceiverBalance.sub(amountToBurn));
+      assertBNequal(await infinity.totalSupply(), supplyBeforeBurn.sub(amountToBurn));
+      assertBNequal(await infinity.totalBurn(), totalBurnBeforeBurn.add(amountToBurn));
+      assertBNequal(await infinity.totalBurnWithFees(), totalBurnWithFeesBeforeBurn.add(amountToBurn));
+      assertBNequal(await infinity.totalFees(), totalFeesBeforeBurn);
+
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      await infinity.transfer(user.address, amount);
+      fee += 25;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+
+      assertBNequal(await infinity.getCycle(), 0);
+      amount = utils.parseUnits('416656', baseUnit);
+      await infinity.transfer(user.address, amount);
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+
+      supplyBeforeBurn = await infinity.totalSupply();
+      totalBurnBeforeBurn = await infinity.totalBurn();
+      totalFeesBeforeBurn = await infinity.totalFees();
+      totalBurnWithFeesBeforeBurn = await infinity.totalBurnWithFees();
+      feeReceiverBalance = await infinity.balanceOf(feeReceiver.address);
+      amountToBurn = utils.parseUnits('10000', baseUnit);
+      await infinity.connect(feeReceiver).burn(amountToBurn);
+
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), feeReceiverBalance.sub(amountToBurn));
+      assertBNequal(await infinity.totalSupply(), supplyBeforeBurn.sub(amountToBurn));
+      assertBNequal(await infinity.totalBurn(), totalBurnBeforeBurn.add(amountToBurn));
+      assertBNequal(await infinity.totalBurnWithFees(), totalBurnWithFeesBeforeBurn.add(amountToBurn));
+      assertBNequal(await infinity.totalFees(), totalFeesBeforeBurn);
+
+      const supplyBeforeRebase = supplyBeforeBurn.sub(amountToBurn);
+      amount = utils.parseUnits('100000', baseUnit);
+      await infinity.transfer(user.address, amount);
+
+      const supplyAfterRebase = await infinity.totalSupply();
+
+      const rebaseAmount = utils.parseUnits('637500', baseUnit);
+      const totalSupplyExpected = supplyBeforeRebase.add(rebaseAmount).sub(amount.mul(fee).div(HUNDRED_PERCENT))
+      assertBNequal(supplyAfterRebase, totalSupplyExpected);
+
+      const balanceOwner = await infinity.balanceOf(owner.address);
+      const balanceUser = await infinity.balanceOf(user.address);
+      const balanceFeeReceiver = await infinity.balanceOf(feeReceiver.address);
+      assertBNequal(balanceOwner.add(balanceUser).add(balanceFeeReceiver), totalSupplyExpected.sub(2));
+
+
+      fee = 250;
+      assertBNequal(await infinity.getBurnFee(), fee);
+      assertBNequal(await infinity.getFee(), fee);
+      assertBNequal(await infinity.getCycle(), 1);
+    });
+
+    // TODO test all 156 cycles with trades and manual burns, check latest supply
+
 
 
 
