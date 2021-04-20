@@ -20,7 +20,7 @@ const { expect } = require('chai');
     let feeReceiver;
     let userTwo;
 
-    before('setup others', async function() {
+    beforeEach('setup others', async function() {
       accounts = await ethers.getSigners();
       owner = accounts[0];
       user = accounts[1];
@@ -184,7 +184,6 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getBurnFee(), increasedPartFee);
       assertBNequal(await infinity.getFee(), increasedPartFee);
     });
-
 
     it('should be possible reach 15 trade cycles, fees auto set to 12%, 6% - to burn and 6% fot, check total supply after rebase', async function() {
       const feeStart = bn(500);
