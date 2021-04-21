@@ -607,11 +607,53 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getCycle(), 1);
     });
 
-    // TODO TECH DEBT
-    // TODO test all 156 cycles with trades and manual burns, check latest supply
+    it('should be possible reach all 156 cycles, fee set to 0, check latest total supply', async function() {
+      const feeStart = bn(500);
+      const partFee = bn(250);
 
+      assertBNequal(await infinity.getBurnFee(), 0);
+      assertBNequal(await infinity.getFee(), 0);
+      await infinity.setFee(feeStart);
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
 
+      await infinity.setFeeReceiver(feeReceiver.address);
 
+      for (let i = 0; i < 52; i++) {
+        await infinity.connect(owner).transfer(
+          user.address,
+          await infinity.balanceOf(owner.address)
+        );
+
+        await infinity.connect(feeReceiver).transfer(
+          owner.address,
+          await infinity.balanceOf(feeReceiver.address)
+        );
+
+        await infinity.connect(user).transfer(
+          owner.address,
+          await infinity.balanceOf(user.address)
+        );
+      }
+
+      assertBNequal(await infinity.getBurnFee(), 250);
+      assertBNequal(await infinity.getFee(), 250);
+      assertBNequal(await infinity.getCycle(), 156);
+
+      const amount = utils.parseUnits('1000001', baseUnit);
+      await infinity.transfer(user.address, amount);
+
+      assertBNequal(await infinity.getBurnFee(), 0);
+      assertBNequal(await infinity.getFee(), 0);
+      assertBNequal(await infinity.getCycle(), 157);
+
+      const ownerTokens = await infinity.balanceOf(owner.address);
+      const userTokens = await infinity.balanceOf(user.address);
+      const feeReceiverTokens = await infinity.balanceOf(feeReceiver.address);
+      const usersTokens = ownerTokens.add(userTokens).add(feeReceiverTokens);
+      assertBNequal(await infinity.totalSupply(), usersTokens.add(1));
+
+    });
 
 
   });

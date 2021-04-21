@@ -28,8 +28,8 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
     uint private constant _DECIMALFACTOR = 10 ** uint(_DECIMALS);
     uint private constant _GRANULARITY = 100;
 
-    uint public _tTotal = 100000000 * _DECIMALFACTOR;
-    uint public _rTotal = (_MAX - (_MAX % _tTotal));
+    uint private _tTotal = 100000000 * _DECIMALFACTOR;
+    uint private _rTotal = (_MAX - (_MAX % _tTotal));
 
     uint private _tFeeTotal;
     uint private _tBurnTotal;
@@ -249,7 +249,10 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
 
         _burnAndRebase(rBurn, transferFee, transferBurn);
         emit Transfer(sender, recipient, tTransferAmount);
-        emit Transfer(sender, feeReceiver, transferFee);
+
+        if (transferFee > 0) {
+            emit Transfer(sender, feeReceiver, transferFee);
+        }
     }
 
     function _transferToExcluded(address sender, address recipient, uint transferAmount) private {
@@ -264,7 +267,10 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
 
         _burnAndRebase(rBurn, transferFee, transferBurn);
         emit Transfer(sender, recipient, tTransferAmount);
-        emit Transfer(sender, feeReceiver, transferFee);
+
+        if (transferFee > 0) {
+            emit Transfer(sender, feeReceiver, transferFee);
+        }
     }
 
     function _transferFromExcluded(address sender, address recipient, uint transferAmount) private {
@@ -279,7 +285,10 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
 
         _burnAndRebase(rBurn, transferFee, transferBurn);
         emit Transfer(sender, recipient, tTransferAmount);
-        emit Transfer(sender, feeReceiver, transferFee);
+
+        if (transferFee > 0) {
+            emit Transfer(sender, feeReceiver, transferFee);
+        }
     }
 
     function _transferBothExcluded(address sender, address recipient, uint transferAmount) private {
@@ -295,7 +304,10 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
 
         _burnAndRebase(rBurn, transferFee, transferBurn);
         emit Transfer(sender, recipient, tTransferAmount);
-        emit Transfer(sender, feeReceiver, transferFee);
+
+        if (transferFee > 0) {
+            emit Transfer(sender, feeReceiver, transferFee);
+        }
     }
 
     function _burnAndRebase(uint rBurn, uint transferFee, uint transferBurn) private {
