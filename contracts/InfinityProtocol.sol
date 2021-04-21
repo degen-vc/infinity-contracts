@@ -191,36 +191,36 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
             _tTradeCycle = _tTradeCycle.add(amount);
 
 
-        // @dev adjust current burnFee depending on the traded tokens during th
-            if (_tTradeCycle >= (0 * _DECIMALFACTOR) && _tTradeCycle <= (999999 * _DECIMALFACTOR)) {
+        // @dev adjust current burnFee/fotFee depending on the traded tokens
+            if (_tTradeCycle >= (0 * _DECIMALFACTOR) && _tTradeCycle <= (1000000 * _DECIMALFACTOR)) {
                 _setFees(500);
-            } else if (_tTradeCycle >= (1000000 * _DECIMALFACTOR) && _tTradeCycle <= (2000000 * _DECIMALFACTOR)) {
+            } else if (_tTradeCycle > (1000000 * _DECIMALFACTOR) && _tTradeCycle <= (2000000 * _DECIMALFACTOR)) {
                 _setFees(550);
-            }   else if (_tTradeCycle >= (2000000 * _DECIMALFACTOR) && _tTradeCycle <= (3000000 * _DECIMALFACTOR)) {
+            }   else if (_tTradeCycle > (2000000 * _DECIMALFACTOR) && _tTradeCycle <= (3000000 * _DECIMALFACTOR)) {
                 _setFees(600);
-            }   else if (_tTradeCycle >= (3000000 * _DECIMALFACTOR) && _tTradeCycle <= (4000000 * _DECIMALFACTOR)) {
+            }   else if (_tTradeCycle > (3000000 * _DECIMALFACTOR) && _tTradeCycle <= (4000000 * _DECIMALFACTOR)) {
                 _setFees(650);
-            } else if (_tTradeCycle >= (4000000 * _DECIMALFACTOR) && _tTradeCycle <= (5000000 * _DECIMALFACTOR)) {
+            } else if (_tTradeCycle > (4000000 * _DECIMALFACTOR) && _tTradeCycle <= (5000000 * _DECIMALFACTOR)) {
                 _setFees(700);
-            } else if (_tTradeCycle >= (5000000 * _DECIMALFACTOR) && _tTradeCycle <= (6000000 * _DECIMALFACTOR)) {
+            } else if (_tTradeCycle > (5000000 * _DECIMALFACTOR) && _tTradeCycle <= (6000000 * _DECIMALFACTOR)) {
                 _setFees(750);
-            } else if (_tTradeCycle >= (6000000 * _DECIMALFACTOR) && _tTradeCycle <= (7000000 * _DECIMALFACTOR)) {
+            } else if (_tTradeCycle > (6000000 * _DECIMALFACTOR) && _tTradeCycle <= (7000000 * _DECIMALFACTOR)) {
                 _setFees(800);
-            } else if (_tTradeCycle >= (7000000 * _DECIMALFACTOR) && _tTradeCycle <= (8000000 * _DECIMALFACTOR)) {
+            } else if (_tTradeCycle > (7000000 * _DECIMALFACTOR) && _tTradeCycle <= (8000000 * _DECIMALFACTOR)) {
                 _setFees(850);
-            } else if (_tTradeCycle >= (8000000 * _DECIMALFACTOR) && _tTradeCycle <= (9000000 * _DECIMALFACTOR)) {
+            } else if (_tTradeCycle > (8000000 * _DECIMALFACTOR) && _tTradeCycle <= (9000000 * _DECIMALFACTOR)) {
                 _setFees(900);
-            } else if (_tTradeCycle >= (9000000 * _DECIMALFACTOR) && _tTradeCycle <= (10000000 * _DECIMALFACTOR)) {
+            } else if (_tTradeCycle > (9000000 * _DECIMALFACTOR) && _tTradeCycle <= (10000000 * _DECIMALFACTOR)) {
                 _setFees(950);
-            } else if (_tTradeCycle >= (10000000 * _DECIMALFACTOR) && _tTradeCycle <= (11000000 * _DECIMALFACTOR)) {
+            } else if (_tTradeCycle > (10000000 * _DECIMALFACTOR) && _tTradeCycle <= (11000000 * _DECIMALFACTOR)) {
                 _setFees(1000);
-            } else if (_tTradeCycle >= (11000000 * _DECIMALFACTOR) && _tTradeCycle <= (12000000 * _DECIMALFACTOR)) {
+            } else if (_tTradeCycle > (11000000 * _DECIMALFACTOR) && _tTradeCycle <= (12000000 * _DECIMALFACTOR)) {
                 _setFees(1050);
-            } else if (_tTradeCycle >= (12000000 * _DECIMALFACTOR) && _tTradeCycle <= (13000000 * _DECIMALFACTOR)) {
+            } else if (_tTradeCycle > (12000000 * _DECIMALFACTOR) && _tTradeCycle <= (13000000 * _DECIMALFACTOR)) {
                 _setFees(1100);
-            } else if (_tTradeCycle >= (13000000 * _DECIMALFACTOR) && _tTradeCycle <= (14000000 * _DECIMALFACTOR)) {
+            } else if (_tTradeCycle > (13000000 * _DECIMALFACTOR) && _tTradeCycle <= (14000000 * _DECIMALFACTOR)) {
                 _setFees(1150);
-            } else if (_tTradeCycle >= (14000000 * _DECIMALFACTOR)) {
+            } else if (_tTradeCycle > (14000000 * _DECIMALFACTOR)) {
                 _setFees(1200);
             }
         }
