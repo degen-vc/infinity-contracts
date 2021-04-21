@@ -14,17 +14,17 @@ contract FeeDistributor is Ownable {
     modifier seeded {
         require(
             initialized,
-            "INFINITY: Fees cannot be distributed until Distributor seeded."
+            "FeeDistributor: Fees cannot be distributed until Distributor seeded."
         );
         _;
     }
 
     function seed(
-        address INFINITY,
-        address vault
+        address _infinity,
+        address _vault
     ) external onlyOwner {
-        infinity = IInfinityProtocol(INFINITY);
-        liquidVault = vault;
+        infinity = IInfinityProtocol(_infinity);
+        liquidVault = _vault;
         initialized = true;
     }
 

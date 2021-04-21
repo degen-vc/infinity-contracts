@@ -21,7 +21,6 @@ task("accounts", "Prints the list of accounts", async () => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  defaultNetwork: "kovan",
   networks: {
     kovan: {
       url: `https://kovan.infura.io/v3/${API_KEY}`,

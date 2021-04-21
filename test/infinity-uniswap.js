@@ -148,7 +148,7 @@ describe('InfinityProtocol Uniswap', function() {
       new Date().getTime() + 3000
     )).to.emit(uniswapPair, 'Swap');
 
-    assertBNequal(await ethers.provider.getBalance(user.address), balanceBefore.add('96926059439706129'));
+    assertBNequal(await ethers.provider.getBalance(user.address), balanceBefore.add('96940451439706129'));
   });
 
   it('should be able to top up ETH/INFINITY pair with the liquidity with 5% fees', async function() {
@@ -268,6 +268,6 @@ describe('InfinityProtocol Uniswap', function() {
       new Date().getTime() + 3000
     )).to.emit(uniswapPair, 'Swap');
 
-    assertBNequal(await ethers.provider.getBalance(user.address), balanceBefore.add('91763667972494518'));
+    assertBNequal(await ethers.provider.getBalance(user.address), balanceBefore.add('91787059972494518'));
   });
 });
