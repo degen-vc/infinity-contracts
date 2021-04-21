@@ -150,7 +150,7 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getFee(), partFee);
 
       await infinity.setFeeReceiver(feeReceiver.address);
-      let amount = utils.parseUnits('999999', baseUnit);
+      let amount = utils.parseUnits('1000000', baseUnit);
       assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
       assertBNequal(await infinity.balanceOf(user.address), 0);
       assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
