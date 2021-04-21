@@ -249,7 +249,10 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
 
         _burnAndRebase(rBurn, transferFee, transferBurn);
         emit Transfer(sender, recipient, tTransferAmount);
-        emit Transfer(sender, feeReceiver, transferFee);
+
+        if (transferFee > 0) {
+            emit Transfer(sender, feeReceiver, transferFee);
+        }
     }
 
     function _transferToExcluded(address sender, address recipient, uint transferAmount) private {
@@ -264,7 +267,10 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
 
         _burnAndRebase(rBurn, transferFee, transferBurn);
         emit Transfer(sender, recipient, tTransferAmount);
-        emit Transfer(sender, feeReceiver, transferFee);
+
+        if (transferFee > 0) {
+            emit Transfer(sender, feeReceiver, transferFee);
+        }
     }
 
     function _transferFromExcluded(address sender, address recipient, uint transferAmount) private {
@@ -279,7 +285,10 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
 
         _burnAndRebase(rBurn, transferFee, transferBurn);
         emit Transfer(sender, recipient, tTransferAmount);
-        emit Transfer(sender, feeReceiver, transferFee);
+
+        if (transferFee > 0) {
+            emit Transfer(sender, feeReceiver, transferFee);
+        }
     }
 
     function _transferBothExcluded(address sender, address recipient, uint transferAmount) private {
@@ -295,7 +304,10 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
 
         _burnAndRebase(rBurn, transferFee, transferBurn);
         emit Transfer(sender, recipient, tTransferAmount);
-        emit Transfer(sender, feeReceiver, transferFee);
+
+        if (transferFee > 0) {
+            emit Transfer(sender, feeReceiver, transferFee);
+        }
     }
 
     function _burnAndRebase(uint rBurn, uint transferFee, uint transferBurn) private {

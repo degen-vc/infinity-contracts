@@ -20,11 +20,11 @@ contract FeeDistributor is Ownable {
     }
 
     function seed(
-        address infinity,
-        address vault
+        address _infinity,
+        address _vault
     ) external onlyOwner {
-        infinity = IInfinityProtocol(infinity);
-        liquidVault = vault;
+        infinity = IInfinityProtocol(_infinity);
+        liquidVault = _vault;
         initialized = true;
     }
 
