@@ -607,6 +607,7 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getCycle(), 1);
     });
 
+    // TODO TECH DEBT
     // TODO test all 156 cycles with trades and manual burns, check latest supply
 
 
