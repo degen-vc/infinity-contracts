@@ -1,7 +1,8 @@
 require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-etherscan");
 require('dotenv').config()
 
-const {API_KEY, PRIVATE_KEY} = process.env;
+const {API_KEY, PRIVATE_KEY, ETHERSCAN_API_KEY} = process.env;
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -38,5 +39,9 @@ module.exports = {
   },
   gasPrice: "10000000000",
   gas: "auto",
+
+  etherscan: {
+    apiKey: ETHERSCAN_API_KEY
+  }
 };
 
