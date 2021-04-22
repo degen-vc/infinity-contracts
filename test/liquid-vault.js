@@ -1,8 +1,7 @@
 const UniswapV2Pair = require("@uniswap/v2-core/build/UniswapV2Pair.json");
 const Ganache = require('./helpers/ganache');
 const deployUniswap = require('./helpers/deployUniswap');
-const assert = require('assert');
-const { expect } = require('chai');
+const { expect, assert, util } = require('chai');
 const { BigNumber, utils } = require('ethers');
 
 describe('LiquidVault', function () {
@@ -11,8 +10,10 @@ describe('LiquidVault', function () {
 
   const ganache = new Ganache();
   const baseUnit = 8;
-  const totalSupply = utils.parseUnits('100000000', baseUnit);
 
+  const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
+  const liquidityETHAmount = utils.parseEther('10');
+  
   const stakeDuration = 1;
   const donationShare = 10;
   const purchaseFee = 30;
@@ -67,6 +68,17 @@ describe('LiquidVault', function () {
       purchaseFee
     );
 
+    await infinity.approve(uniswapRouter.address, liquidityInfinityAmount);
+    await expect(uniswapRouter.addLiquidityETH(
+      infinity.address,
+      liquidityInfinityAmount,
+      0,
+      0,
+      owner.address,
+      new Date().getTime() + 3000,
+      { value: liquidityETHAmount }
+    )).to.emit(uniswapPair, 'Mint');
+
     await ganache.snapshot();
   });
 
@@ -82,6 +94,24 @@ describe('LiquidVault', function () {
     )).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
+  it('should revert setParameters() if caller is not the owner', async function() {
+    await expect(liquidVault.connect(user).setParameters(
+      stakeDuration,
+      donationShare,
+      purchaseFee
+    )).to.be.revertedWith('Ownable: caller is not the owner');
+  });
+
+  it('should revert setFeeReceiverAddress() if caller is not the owner', async function() {
+    await expect(liquidVault.connect(user).setFeeReceiverAddress(feeReceiver.address))
+      .to.be.revertedWith('Ownable: caller is not the owner');
+  });
+
+  it('should revert enableLPForceUnlock() if caller is not the owner', async function() {
+    await expect(liquidVault.connect(user).enableLPForceUnlock())
+      .to.be.revertedWith('Ownable: caller is not the owner');
+  });
+
   it('should check liquid vault\'s parameters', async function() {
     const config = await liquidVault.config();
 
@@ -93,5 +123,129 @@ describe('LiquidVault', function () {
     assertBNequal(config.stakeDuration, 86400);
     assertBNequal(config.donationShare, donationShare);
     assertBNequal(config.purchaseFee, purchaseFee);
+  });
+
+  it('should set new parameters', async function() {
+    const newStakeDuration = 8;
+    const newDonationShare = 20;
+    const newPurchaseFee = 20;
+    
+    await liquidVault.setParameters(newStakeDuration, newDonationShare, newPurchaseFee);
+    const { stakeDuration, donationShare, purchaseFee } = await liquidVault.config();
+
+    assertBNequal(stakeDuration, 691200);
+    assertBNequal(donationShare, newDonationShare);
+    assertBNequal(purchaseFee, newPurchaseFee);
+  });
+
+  it('should do a forced unlock and set lock period to 0', async function() {
+    await liquidVault.enableLPForceUnlock();
+    const stakeDuration = await liquidVault.getStakeDuration();
+
+    assert.isTrue(await liquidVault.forceUnlock());
+    assertBNequal(stakeDuration, 0);
+  });
+
+  it('should set a new fee receiver address', async function() {
+    await liquidVault.setFeeReceiverAddress(user.address);
+    const { feeReceiver } = await liquidVault.config();
+
+    assert.equal(feeReceiver, user.address);
+  });
+
+  it('should revert purchaseLP() if there are 0 INFINITY on the balance', async function() {
+    const purchaseValue = utils.parseEther('1');
+    await expect(liquidVault.purchaseLP({ value: purchaseValue }))
+      .to.be.revertedWith('LiquidVault: insufficient INFINITY tokens in LiquidVault');
+  });
+
+  it('should revert purchaseLP() if 0 ETH is passed', async function() {
+    await expect(liquidVault.purchaseLP())
+      .to.be.revertedWith('LiquidVault: ETH required to mint INFINITY LP');
+  });
+
+  it('should purchase LP tokens with 0% fees', async function() {
+    const purchaseValue = utils.parseEther('1');
+    const transferToLiquidVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
+
+    await infinity.transfer(liquidVault.address, transferToLiquidVault);
+    assertBNequal(await infinity.balanceOf(liquidVault.address), transferToLiquidVault);
+
+    const feeReceiverBalanceBefore = await ethers.provider.getBalance(feeReceiver.address);
+    const purchaseLP = await liquidVault.purchaseLP({ value: purchaseValue });
+    const receipt = await purchaseLP.wait();
+    const lockedLpLength = await liquidVault.lockedLPLength(owner.address);
+    assertBNequal(lockedLpLength, 1);
+
+    const lockedLP = await liquidVault.getLockedLP(owner.address, 0);
+    const { amount, timestamp } = receipt.events[6].args;
+    assert.equal(lockedLP[0], owner.address);
+    assertBNequal(lockedLP[1], amount);
+    assertBNequal(lockedLP[2], timestamp);
+
+    const { feeReceiver: expectedFeeReceiver } = await liquidVault.config();
+    const { percentageAmount } = receipt.events[7].args;
+    const estimatedReceiverAmount = (purchaseValue * purchaseFee) / 100;
+    const feeReceiverBalanceAfter = await ethers.provider.getBalance(feeReceiver.address);
+
+    assert.equal(expectedFeeReceiver, feeReceiver.address);
+    assertBNequal(feeReceiverBalanceAfter.sub(feeReceiverBalanceBefore), estimatedReceiverAmount);
+    assertBNequal(estimatedReceiverAmount, percentageAmount);
+  });
+
+  it('should revert purchaseLP() if too much ETH provided', async function() {
+    const purchaseValue = utils.parseEther('10');
+    const transferToLiquidVault = utils.parseUnits('200', baseUnit); // 200 tokens
+
+    await infinity.transfer(liquidVault.address, transferToLiquidVault);
+    assertBNequal(await infinity.balanceOf(liquidVault.address), transferToLiquidVault);
+
+    await expect(liquidVault.purchaseLP({ value: purchaseValue }))
+      .to.be.revertedWith('LiquidVault: insufficient INFINITY tokens in LiquidVault');
+  });
+
+  it('should revert claimLP() if there is no locked LP', async () => {
+    await expect(liquidVault.claimLP())
+      .to.be.revertedWith('LiquidVault: nothing to claim.');
+  });
+
+  it('should revert claimLP() if the lock period is not over', async function() {
+    const purchaseValue = utils.parseEther('1');
+    const transferToLiquidVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
+
+    await infinity.transfer(liquidVault.address, transferToLiquidVault);
+    assertBNequal(await infinity.balanceOf(liquidVault.address), transferToLiquidVault);
+
+    await liquidVault.purchaseLP({ value: purchaseValue });
+    await expect(liquidVault.claimLP())
+      .to.be.revertedWith('LiquidVault: LP still locked.');
+  });
+
+  it('should be able to claim 1 batch after 1 purchase with 0% fees', async function() {
+    const purchaseValue = utils.parseEther('1');
+    const transferToLiquidVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
+
+    await infinity.transfer(liquidVault.address, transferToLiquidVault);
+    assertBNequal(await infinity.balanceOf(liquidVault.address), transferToLiquidVault);
+
+    await liquidVault.purchaseLP({ value: purchaseValue });
+    const lockedLP = await liquidVault.getLockedLP(owner.address, 0);
+    const { donationShare } = await liquidVault.config();
+    const stakeDuration = await liquidVault.getStakeDuration();
+    const lpBalanceBefore = await uniswapPair.balanceOf(owner.address);
+
+    await ganache.setTime((bn(lockedLP[2]).add(stakeDuration)).toNumber());
+    const claimLP = await liquidVault.claimLP();
+    const receipt = await claimLP.wait();
+
+    const { holder, amount, exitFee, claimed } = receipt.events[0].args;
+    const estimatedFeeAmount = lockedLP[1].mul(donationShare).div(bn('100'));
+    const lpBalanceAfter = await uniswapPair.balanceOf(owner.address);
+
+    assert.strictEqual(holder, owner.address);
+    assert.isTrue(claimed);
+    assertBNequal(amount, lockedLP[1]);
+    assertBNequal(exitFee, estimatedFeeAmount);
+    assertBNequal(amount.sub(exitFee), lpBalanceAfter.sub(lpBalanceBefore));
   });
 });
