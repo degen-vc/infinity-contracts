@@ -248,4 +248,60 @@ describe('LiquidVault', function () {
     assertBNequal(exitFee, estimatedFeeAmount);
     assertBNequal(amount.sub(exitFee), lpBalanceAfter.sub(lpBalanceBefore));
   });
+
+  it('should be able to claim 2 batches after 2 purchases and 1 3rd party purchase with 0% fees', async function() {
+    const purchaseValue = utils.parseEther('1');
+    const transferToLiquidVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
+
+    await infinity.transfer(liquidVault.address, transferToLiquidVault);
+    assertBNequal(await infinity.balanceOf(liquidVault.address), transferToLiquidVault);
+
+    await liquidVault.purchaseLP({ value: purchaseValue });
+    await liquidVault.purchaseLP({ value: purchaseValue });
+    await liquidVault.connect(user).purchaseLP({ value: purchaseValue });
+
+    assertBNequal(await liquidVault.lockedLPLength(owner.address), 2);
+    assertBNequal(await liquidVault.lockedLPLength(user.address), 1);
+
+    const lockedLP1 = await liquidVault.getLockedLP(owner.address, 0);
+    const lockedLP2 = await liquidVault.getLockedLP(owner.address, 1);
+    const lockedLP3 = await liquidVault.getLockedLP(user.address, 0);
+
+    const stakeDuration = await liquidVault.getStakeDuration();
+    const lpBalanceBefore = await uniswapPair.balanceOf(owner.address);
+
+    await ganache.setTime((bn(lockedLP3[2]).add(stakeDuration)).toNumber());
+    const claimLP1 = await liquidVault.claimLP();
+    const receipt1 = await claimLP1.wait();
+    const { amount: amount1, exitFee: exitFee1 } = receipt1.events[0].args;
+    
+    const claimLP2 = await liquidVault.claimLP();
+    const receipt2 = await claimLP2.wait();
+    const { amount: amount2, exitFee: exitFee2 } = receipt2.events[0].args;
+    
+    const expectedLpAmount = amount1.sub(exitFee1).add(amount2.sub(exitFee2));
+    const lpBalanceAfter = await uniswapPair.balanceOf(owner.address);
+
+    assertBNequal(lpBalanceAfter.sub(lpBalanceBefore), expectedLpAmount);
+    assertBNequal(amount1, lockedLP1[1]);
+    assertBNequal(amount2, lockedLP2[1]);
+
+    // an attempt to claim nonexistent batch
+    await expect(liquidVault.claimLP())
+      .to.be.revertedWith('LiquidVault: nothing to claim.');
+
+    const lpBalanceBefore3 = await uniswapPair.balanceOf(user.address);
+    const claimLP3 = await liquidVault.connect(user).claimLP();
+    const receipt3 = await claimLP3.wait();
+    const { holder: holder3, amount: amount3, exitFee: exitFee3 } = receipt3.events[0].args;
+
+    const expectedLpAmount3 = amount3.sub(exitFee3);
+    const lpBalanceAfter3 = await uniswapPair.balanceOf(user.address);
+
+    assert.equal(holder3, user.address);
+    assertBNequal(amount3, lockedLP3[1]);
+    assertBNequal(lpBalanceAfter3.sub(lpBalanceBefore3), expectedLpAmount3);
+  });
+
+  //TODO: add tests for the force unlock and for token with fees
 });
