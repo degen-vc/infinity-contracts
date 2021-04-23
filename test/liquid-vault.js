@@ -17,7 +17,7 @@ describe('LiquidVault', function () {
   const stakeDuration = 1;
   const donationShare = 10;
   const purchaseFee = 30;
-  const liquidVaultShare = 90;
+  const liquidVaultShare = 80;
   const burnPercentage = 10;
 
   let accounts;
@@ -180,33 +180,45 @@ describe('LiquidVault', function () {
       .to.be.revertedWith('LiquidVault: ETH required to mint INFINITY LP');
   });
 
-  it('should purchase LP tokens with 0% fees', async function() {
+  it('should purchase LP tokens with 0% fees and non-empty FeeDistributor', async function() {
     const purchaseValue = utils.parseEther('1');
     const transferToLiquidVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
+    const transferToDistributor = utils.parseUnits('5000', 8);
 
     await infinity.transfer(liquidVault.address, transferToLiquidVault);
     assertBNequal(await infinity.balanceOf(liquidVault.address), transferToLiquidVault);
 
+    const feeReceiverInfinityBalance = await infinity.balanceOf(feeReceiver.address);
+    assertBNequal(feeReceiverInfinityBalance, 0);
+
+    await infinity.setFeeReceiver(feeDistributor.address);
+    await infinity.transfer(feeDistributor.address, transferToDistributor);
+
     const feeReceiverBalanceBefore = await ethers.provider.getBalance(feeReceiver.address);
     const purchaseLP = await liquidVault.purchaseLP({ value: purchaseValue });
     const receipt = await purchaseLP.wait();
+
     const lockedLpLength = await liquidVault.lockedLPLength(owner.address);
     assertBNequal(lockedLpLength, 1);
 
     const lockedLP = await liquidVault.getLockedLP(owner.address, 0);
-    const { amount, timestamp } = receipt.events[6].args;
+    const { amount, timestamp } = receipt.events[9].args;
     assert.equal(lockedLP[0], owner.address);
     assertBNequal(lockedLP[1], amount);
     assertBNequal(lockedLP[2], timestamp);
 
     const { feeReceiver: expectedFeeReceiver } = await liquidVault.config();
-    const { percentageAmount } = receipt.events[7].args;
+    const { percentageAmount } = receipt.events[10].args;
     const estimatedReceiverAmount = (purchaseValue * purchaseFee) / 100;
     const feeReceiverBalanceAfter = await ethers.provider.getBalance(feeReceiver.address);
 
     assert.equal(expectedFeeReceiver, feeReceiver.address);
     assertBNequal(feeReceiverBalanceAfter.sub(feeReceiverBalanceBefore), estimatedReceiverAmount);
     assertBNequal(estimatedReceiverAmount, percentageAmount);
+
+    const expectedInfinityToReceiver = transferToDistributor.mul('10').div('100');
+    const feeReceiverInfinityBalanceAfter = await infinity.balanceOf(feeReceiver.address);
+    assertBNequal(feeReceiverInfinityBalanceAfter, expectedInfinityToReceiver);
   });
 
   it('should revert purchaseLP() if too much ETH provided', async function() {
