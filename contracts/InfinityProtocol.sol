@@ -42,6 +42,7 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
     uint private tokenBatchCount = 0;
     uint private _BURN_FEE = 0;
     uint private _FOT_FEE = 0;
+    bool private _feeSet;
 
     uint private constant _MAX_TX_SIZE = 100000000 * _DECIMALFACTOR;
 
@@ -397,8 +398,10 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
         _FOT_FEE = fee.div(2);
     }
 
-    function setFee(uint fee) external onlyOwner() {
-        _setFees(fee);
+    function setInitialFee() external onlyOwner() {
+        require(!_feeSet, "Initial fee already set");
+        _setFees(500);
+        _feeSet = true;
     }
 
     function getBurnFee() public view returns(uint)  {
@@ -428,11 +431,5 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
     function _rebase(uint supplyDelta) internal {
         _infinityCycle = _infinityCycle.add(1);
         _tTotal = _tTotal.add(supplyDelta);
-
-        // after 156, the protocol reaches its final stage
-        // fees will be set to 0
-        if (_infinityCycle > 156) {
-            _setFees(0);
-        }
     }
 }

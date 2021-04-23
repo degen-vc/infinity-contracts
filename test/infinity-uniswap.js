@@ -55,7 +55,7 @@ describe('InfinityProtocol Uniswap', function() {
     assertBNequal(await uniswapPair.totalSupply(), 0);
   });
 
-  it('should be able to top up ETH/INFINITY pair with the liquidity with 0% fees', async function() {
+  it.skip('should be able to top up ETH/INFINITY pair with the liquidity with 0% fees', async function() {
     const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
     const liquidityETHAmount = utils.parseEther('10');
 
@@ -146,7 +146,7 @@ describe('InfinityProtocol Uniswap', function() {
     )).to.emit(uniswapPair, 'Swap');
   });
 
-  it('should be able to top up ETH/INFINITY pair with the liquidity with 5% fees', async function() {
+  it.skip('should be able to top up ETH/INFINITY pair with the liquidity with 5% fees', async function() {
     const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
     const liquidityETHAmount = utils.parseEther('10');
 
@@ -156,7 +156,7 @@ describe('InfinityProtocol Uniswap', function() {
     const fee = bn(500);
     const partFee = bn(250);
 
-    await infinity.setFee(fee);
+    await infinity.setInitialFee();
     assertBNequal(await infinity.getBurnFee(), partFee);
     assertBNequal(await infinity.getFee(), partFee);
 
@@ -191,7 +191,7 @@ describe('InfinityProtocol Uniswap', function() {
     const fee = bn(500);
     const partFee = bn(250);
 
-    await infinity.setFee(fee);
+    await infinity.setInitialFee();
     assertBNequal(await infinity.getBurnFee(), partFee);
     assertBNequal(await infinity.getFee(), partFee);
 
@@ -230,7 +230,7 @@ describe('InfinityProtocol Uniswap', function() {
     const fee = bn(500);
     const partFee = bn(250);
 
-    await infinity.setFee(fee);
+    await infinity.setInitialFee();
     assertBNequal(await infinity.getBurnFee(), partFee);
     assertBNequal(await infinity.getFee(), partFee);
 
