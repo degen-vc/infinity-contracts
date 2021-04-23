@@ -49,7 +49,7 @@ describe('InfinityProtocol Uniswap', function() {
     await ganache.snapshot();
   });
 
-  it('should be able to check a Uniswap pair ETH/INFINITY', async function() {
+  it.skip('should be able to check a Uniswap pair ETH/INFINITY', async function() {
     assert.strictEqual(await uniswapPair.token0(), weth.address);
     assert.strictEqual(await uniswapPair.token1(), infinity.address);
     assertBNequal(await uniswapPair.totalSupply(), 0);

@@ -19,6 +19,7 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
     address[] private _excluded;
     address public feeReceiver;
     address public router;
+    uint public maxCycles;
 
     string  private constant _NAME = "Infinity";
     string  private constant _SYMBOL = "INFINITY";
@@ -33,15 +34,15 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
 
     uint private _tFeeTotal;
     uint private _tBurnTotal;
-    uint private _infinityCycle = 0;
+    uint private _infinityCycle;
 
-    uint private _tTradeCycle = 0;
-    uint private _tBurnCycle = 0;
+    uint private _tTradeCycle;
+    uint private _tBurnCycle;
 
-    uint private transferredTokens = 0;
-    uint private tokenBatchCount = 0;
-    uint private _BURN_FEE = 0;
-    uint private _FOT_FEE = 0;
+    uint private transferredTokens;
+    uint private tokenBatchCount;
+    uint private _BURN_FEE;
+    uint private _FOT_FEE;
     bool private _feeSet;
 
     uint private constant _MAX_TX_SIZE = 100000000 * _DECIMALFACTOR;
@@ -49,6 +50,7 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
     constructor (address _router) public {
         _rOwned[_msgSender()] = _rTotal;
         router = _router;
+        setMaxCycles(500);
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
 
@@ -319,10 +321,10 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
         _tTotal = _tTotal.sub(transferBurn);
 
 
-        // @dev after 1,275,000 tokens burnt, supply is expanded by 637,500 tokens 
+        // @dev after 1,275,000 tokens burnt, supply is expanded by 500,000 tokens 
         if (_tBurnCycle >= (1275000 * _DECIMALFACTOR)) {
                 //set rebase percent
-                uint _tRebaseDelta = 637500 * _DECIMALFACTOR;
+                uint _tRebaseDelta = 500000 * _DECIMALFACTOR;
                 _tBurnCycle = _tBurnCycle.sub((1275000 * _DECIMALFACTOR));
                 _tTradeCycle = 0;
                 _setFees(500);
@@ -404,6 +406,11 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
         _feeSet = true;
     }
 
+    function setMaxCycles(uint _maxCycles) public onlyOwner() {
+        require(_maxCycles >= _infinityCycle, "Can not set more than current cycle");
+        maxCycles = _maxCycles;
+    }
+
     function getBurnFee() public view returns(uint)  {
         return _BURN_FEE;
     }
@@ -431,5 +438,9 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
     function _rebase(uint supplyDelta) internal {
         _infinityCycle = _infinityCycle.add(1);
         _tTotal = _tTotal.add(supplyDelta);
+
+        if (_infinityCycle > maxCycles) {
+            _setFees(0);
+        }
     }
 }
