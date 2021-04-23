@@ -19,6 +19,8 @@ contract FeeDistributor is Ownable {
 
     bool public initialized;
 
+    uint private constant MINIMUM_AMOUNT = 1e8;
+
     modifier seeded {
         require(
             initialized,
@@ -48,9 +50,8 @@ contract FeeDistributor is Ownable {
 
     function distributeFees() external seeded {
         uint balance = infinity.balanceOf(address(this));
-        uint minimumAmount = 1e8;
 
-        if (balance < minimumAmount) {
+        if (balance < MINIMUM_AMOUNT) {
             return;
         }
 
