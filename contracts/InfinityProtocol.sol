@@ -321,7 +321,7 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
         _tTotal = _tTotal.sub(transferBurn);
 
 
-        // @dev after 1,275,000 tokens burnt, supply is expanded by 637,500 tokens 
+        // @dev after 1,275,000 tokens burnt, supply is expanded by 500,000 tokens 
         if (_tBurnCycle >= (1275000 * _DECIMALFACTOR)) {
                 //set rebase percent
                 uint _tRebaseDelta = 500000 * _DECIMALFACTOR;
