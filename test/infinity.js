@@ -68,41 +68,6 @@ const { expect } = require('chai');
       assertBNequal(await infinity.totalSupply(), totalSupply);
     });
 
-    it('should be possible to transfer tokens, fees set to 4%, 2% - to burn and 2% fot', async function() {
-      const fee = bn(400); // 4%
-      const partFee = bn(200); // 2%
-
-      assertBNequal(await infinity.getBurnFee(), 0);
-      assertBNequal(await infinity.getFee(), 0);
-      await infinity.setFee(fee);
-      assertBNequal(await infinity.getBurnFee(), partFee);
-      assertBNequal(await infinity.getFee(), partFee);
-
-      await infinity.setFeeReceiver(feeReceiver.address);
-      const amount = utils.parseUnits('100', baseUnit);
-      assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
-      assertBNequal(await infinity.balanceOf(user.address), 0);
-      assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
-
-      assertBNequal(await infinity.getCycle(), 0);
-      assertBNequal(await infinity.getBurnCycle(), 0);
-      assertBNequal(await infinity.getTradedCycle(), 0);
-      assertBNequal(await infinity.totalBurn(), 0);
-
-      await infinity.transfer(user.address, amount);
-
-      assertBNequal(await infinity.getCycle(), 0);
-      assertBNequal(await infinity.getBurnCycle(), amount.mul(fee).div(HUNDRED_PERCENT));
-      assertBNequal(await infinity.getTradedCycle(), 0);
-      assertBNequal(await infinity.totalBurn(), amount.mul(partFee).div(HUNDRED_PERCENT));
-
-      assertBNequal(await infinity.balanceOf(owner.address), totalSupply.sub(amount));
-      assertBNequal(await infinity.balanceOf(user.address), amount.sub(amount.mul(fee).div(HUNDRED_PERCENT)));
-      assertBNequal(await infinity.balanceOf(feeReceiver.address), amount.mul(partFee).div(HUNDRED_PERCENT));
-
-      assertBNequal(await infinity.totalSupply(), totalSupply.sub(amount.mul(partFee).div(HUNDRED_PERCENT)));
-    });
-
 
     it('should be possible to transfer tokens, fees set to 5%, 2.5% - to burn and 2.5% fot, trade cycle updated', async function() {
       const fee = bn(500);
@@ -110,7 +75,7 @@ const { expect } = require('chai');
 
       assertBNequal(await infinity.getBurnFee(), 0);
       assertBNequal(await infinity.getFee(), 0);
-      await infinity.setFee(fee);
+      await infinity.setInitialFee();
       assertBNequal(await infinity.getBurnFee(), partFee);
       assertBNequal(await infinity.getFee(), partFee);
 
@@ -145,7 +110,7 @@ const { expect } = require('chai');
 
       assertBNequal(await infinity.getBurnFee(), 0);
       assertBNequal(await infinity.getFee(), 0);
-      await infinity.setFee(fee);
+      await infinity.setInitialFee();
       assertBNequal(await infinity.getBurnFee(), partFee);
       assertBNequal(await infinity.getFee(), partFee);
 
@@ -191,7 +156,7 @@ const { expect } = require('chai');
 
       assertBNequal(await infinity.getBurnFee(), 0);
       assertBNequal(await infinity.getFee(), 0);
-      await infinity.setFee(feeStart);
+      await infinity.setInitialFee();
       assertBNequal(await infinity.getBurnFee(), partFee);
       assertBNequal(await infinity.getFee(), partFee);
 
@@ -304,7 +269,7 @@ const { expect } = require('chai');
 
       assertBNequal(await infinity.getBurnFee(), 0);
       assertBNequal(await infinity.getFee(), 0);
-      await infinity.setFee(fee);
+      await infinity.setInitialFee();
       assertBNequal(await infinity.getBurnFee(), partFee);
       assertBNequal(await infinity.getFee(), partFee);
 
@@ -351,7 +316,7 @@ const { expect } = require('chai');
 
       assertBNequal(await infinity.getBurnFee(), 0);
       assertBNequal(await infinity.getFee(), 0);
-      await infinity.setFee(fee);
+      await infinity.setInitialFee();
       assertBNequal(await infinity.getBurnFee(), partFee);
       assertBNequal(await infinity.getFee(), partFee);
 
@@ -393,7 +358,7 @@ const { expect } = require('chai');
 
       assertBNequal(await infinity.getBurnFee(), 0);
       assertBNequal(await infinity.getFee(), 0);
-      await infinity.setFee(fee);
+      await infinity.setInitialFee();
       assertBNequal(await infinity.getBurnFee(), partFee);
       assertBNequal(await infinity.getFee(), partFee);
 
@@ -435,7 +400,7 @@ const { expect } = require('chai');
 
       assertBNequal(await infinity.getBurnFee(), 0);
       assertBNequal(await infinity.getFee(), 0);
-      await infinity.setFee(fee);
+      await infinity.setInitialFee();
       assertBNequal(await infinity.getBurnFee(), partFee);
       assertBNequal(await infinity.getFee(), partFee);
 
@@ -469,7 +434,7 @@ const { expect } = require('chai');
 
       assertBNequal(await infinity.getBurnFee(), 0);
       assertBNequal(await infinity.getFee(), 0);
-      await infinity.setFee(feeStart);
+      await infinity.setInitialFee();
       assertBNequal(await infinity.getBurnFee(), partFee);
       assertBNequal(await infinity.getFee(), partFee);
 
@@ -607,13 +572,13 @@ const { expect } = require('chai');
       assertBNequal(await infinity.getCycle(), 1);
     });
 
-    it('should be possible reach all 156 cycles, fee set to 0, check latest total supply', async function() {
+    it('should be possible reach all 156 cycles, fee NOT set to 0, check latest total supply', async function() {
       const feeStart = bn(500);
       const partFee = bn(250);
 
       assertBNequal(await infinity.getBurnFee(), 0);
       assertBNequal(await infinity.getFee(), 0);
-      await infinity.setFee(feeStart);
+      await infinity.setInitialFee();
       assertBNequal(await infinity.getBurnFee(), partFee);
       assertBNequal(await infinity.getFee(), partFee);
 
@@ -643,8 +608,8 @@ const { expect } = require('chai');
       const amount = utils.parseUnits('1000001', baseUnit);
       await infinity.transfer(user.address, amount);
 
-      assertBNequal(await infinity.getBurnFee(), 0);
-      assertBNequal(await infinity.getFee(), 0);
+      assertBNequal(await infinity.getBurnFee(), 250);
+      assertBNequal(await infinity.getFee(), 250);
       assertBNequal(await infinity.getCycle(), 157);
 
       const ownerTokens = await infinity.balanceOf(owner.address);
@@ -653,6 +618,22 @@ const { expect } = require('chai');
       const usersTokens = ownerTokens.add(userTokens).add(feeReceiverTokens);
       assertBNequal(await infinity.totalSupply(), usersTokens.add(1));
 
+    });
+
+    it('should be possible to set initial fee only once', async function() {
+      const fee = bn(500);
+      const partFee = bn(250);
+
+      assertBNequal(await infinity.getBurnFee(), 0);
+      assertBNequal(await infinity.getFee(), 0);
+      await infinity.setInitialFee();
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
+
+      await expect(infinity.setInitialFee()).to.revertedWith('Initial fee already set');
+
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
     });
 
 
