@@ -1,12 +1,9 @@
 const hardhat = require('hardhat');
 require('dotenv').config()
 
-const { ROUTER, UNISWAP_PAIR, FEE_RECEIVER } = process.env;
+const { ROUTER, FEE_RECEIVER } = process.env;
 
 async function main() {
-  const stakeDuration = 1;
-  const donationShare = 10;
-  const purchaseFee = 30;
   const liquidVaultShare = 60;
   const burnPercentage = 10;
 
@@ -34,17 +31,6 @@ async function main() {
     FEE_RECEIVER,
     liquidVaultShare,
     burnPercentage
-  );
-
-  await liquidVault.seed(
-    stakeDuration,
-    infinityProtocol.address,
-    UNISWAP_PAIR,
-    ROUTER,
-    feeDistributor.address,
-    FEE_RECEIVER,
-    donationShare,
-    purchaseFee
   );
 }
 
