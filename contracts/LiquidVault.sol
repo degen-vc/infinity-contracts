@@ -5,6 +5,7 @@ import "./IERC20.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IWETH.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
+import "./IFeeDistributor.sol";
 
 contract LiquidVault is Ownable {
   /** Emitted when purchaseLP() is called to track ETH amounts */
@@ -43,6 +44,7 @@ contract LiquidVault is Ownable {
       address infinityToken;
       IUniswapV2Router02 uniswapRouter;
       IUniswapV2Pair tokenPair;
+      IFeeDistributor feeDistributor;
       address weth;
       address payable feeReceiver;
       uint32 stakeDuration;
@@ -70,6 +72,7 @@ contract LiquidVault is Ownable {
       address infinityToken,
       address uniswapPair,
       address uniswapRouter,
+      address feeDistributor,
       address payable feeReceiver,
       uint8 donationShare, // LP Token
       uint8 purchaseFee // ETH
@@ -77,6 +80,7 @@ contract LiquidVault is Ownable {
       config.infinityToken = infinityToken;
       config.uniswapRouter = IUniswapV2Router02(uniswapRouter);
       config.tokenPair = IUniswapV2Pair(uniswapPair);
+      config.feeDistributor = IFeeDistributor(feeDistributor);
       config.weth = config.uniswapRouter.WETH();
       setFeeReceiverAddress(feeReceiver);
       setParameters(duration, donationShare, purchaseFee);
@@ -119,6 +123,7 @@ contract LiquidVault is Ownable {
   }
 
   function purchaseLPFor(address beneficiary) public payable lock {
+      config.feeDistributor.distributeFees();
       require(msg.value > 0, "LiquidVault: ETH required to mint INFINITY LP");
 
       uint feeValue = (config.purchaseFee * msg.value) / 100;
