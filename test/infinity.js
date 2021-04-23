@@ -248,14 +248,14 @@ const { expect } = require('chai');
 
       const supplyAfterRebase = await infinity.totalSupply();
 
-      const rebaseAmount = utils.parseUnits('637500', baseUnit);
+      const rebaseAmount = utils.parseUnits('500000', baseUnit);
       const totalSupplyExpected = supplyBeforeRebase.add(rebaseAmount).sub(amount.mul(fee).div(HUNDRED_PERCENT))
       assertBNequal(supplyAfterRebase, totalSupplyExpected);
 
       const balanceOwner = await infinity.balanceOf(owner.address);
       const balanceUser = await infinity.balanceOf(user.address);
       const balanceFeeReceiver = await infinity.balanceOf(feeReceiver.address);
-      assertBNequal(balanceOwner.add(balanceUser).add(balanceFeeReceiver), totalSupplyExpected.sub(1));
+      assertBNequal(balanceOwner.add(balanceUser).add(balanceFeeReceiver), totalSupplyExpected.sub(2));
 
       fee = 250;
       assertBNequal(await infinity.getBurnFee(), fee);
@@ -556,7 +556,7 @@ const { expect } = require('chai');
 
       const supplyAfterRebase = await infinity.totalSupply();
 
-      const rebaseAmount = utils.parseUnits('637500', baseUnit);
+      const rebaseAmount = utils.parseUnits('500000', baseUnit);
       const totalSupplyExpected = supplyBeforeRebase.add(rebaseAmount).sub(amount.mul(fee).div(HUNDRED_PERCENT))
       assertBNequal(supplyAfterRebase, totalSupplyExpected);
 
@@ -616,7 +616,7 @@ const { expect } = require('chai');
       const userTokens = await infinity.balanceOf(user.address);
       const feeReceiverTokens = await infinity.balanceOf(feeReceiver.address);
       const usersTokens = ownerTokens.add(userTokens).add(feeReceiverTokens);
-      assertBNequal(await infinity.totalSupply(), usersTokens.add(1));
+      assertBNequal(await infinity.totalSupply(), usersTokens.add(2));
 
     });
 
@@ -634,6 +634,110 @@ const { expect } = require('chai');
 
       assertBNequal(await infinity.getBurnFee(), partFee);
       assertBNequal(await infinity.getFee(), partFee);
+    });
+
+    it('should be possible reach maxCycles (156), fee set to 0, check latest total supply', async function() {
+      const partFee = bn(250);
+
+      assertBNequal(await infinity.getBurnFee(), 0);
+      assertBNequal(await infinity.getFee(), 0);
+      await infinity.setInitialFee();
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
+
+      await infinity.setFeeReceiver(feeReceiver.address);
+
+      for (let i = 0; i < 52; i++) {
+        await infinity.connect(owner).transfer(
+          user.address,
+          await infinity.balanceOf(owner.address)
+        );
+
+        await infinity.connect(feeReceiver).transfer(
+          owner.address,
+          await infinity.balanceOf(feeReceiver.address)
+        );
+
+        await infinity.connect(user).transfer(
+          owner.address,
+          await infinity.balanceOf(user.address)
+        );
+      }
+
+      assertBNequal(await infinity.getBurnFee(), 250);
+      assertBNequal(await infinity.getFee(), 250);
+      assertBNequal(await infinity.getCycle(), 156);
+
+      await infinity.setMaxCycles(156);
+
+      const amount = utils.parseUnits('1000001', baseUnit);
+      await infinity.transfer(user.address, amount);
+
+      assertBNequal(await infinity.getBurnFee(), 0);
+      assertBNequal(await infinity.getFee(), 0);
+      assertBNequal(await infinity.getCycle(), 157);
+
+      const ownerTokens = await infinity.balanceOf(owner.address);
+      const userTokens = await infinity.balanceOf(user.address);
+      const feeReceiverTokens = await infinity.balanceOf(feeReceiver.address);
+      const usersTokens = ownerTokens.add(userTokens).add(feeReceiverTokens);
+      assertBNequal(await infinity.totalSupply(), usersTokens.add(2));
+
+    });
+
+    it('should be possible to set max cycles', async function() {
+      assertBNequal(await infinity.maxCycles(), 500);
+
+      await infinity.setMaxCycles(300);
+
+      assertBNequal(await infinity.maxCycles(), 300);
+
+    });
+
+    it('should NOT be possible to set max cycles for not owner', async function() {
+      assertBNequal(await infinity.maxCycles(), 500);
+
+      await expect(infinity.connect(user).setMaxCycles(300)).to.revertedWith('Ownable: caller is not the owner');
+
+      assertBNequal(await infinity.maxCycles(), 500);
+
+    });
+
+    it('should NOT be possible to set max cycles if less than current cycle', async function() {
+      const partFee = bn(250);
+
+      assertBNequal(await infinity.getBurnFee(), 0);
+      assertBNequal(await infinity.getFee(), 0);
+      await infinity.setInitialFee();
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
+
+      await infinity.setFeeReceiver(feeReceiver.address);
+
+      for (let i = 0; i < 52; i++) {
+        await infinity.connect(owner).transfer(
+          user.address,
+          await infinity.balanceOf(owner.address)
+        );
+
+        await infinity.connect(feeReceiver).transfer(
+          owner.address,
+          await infinity.balanceOf(feeReceiver.address)
+        );
+
+        await infinity.connect(user).transfer(
+          owner.address,
+          await infinity.balanceOf(user.address)
+        );
+      }
+
+      assertBNequal(await infinity.getCycle(), 156);
+      assertBNequal(await infinity.maxCycles(), 500);
+
+      await expect(infinity.setMaxCycles(155)).to.revertedWith('Can not set more than current cycle');
+
+      assertBNequal(await infinity.maxCycles(), 500);
+
     });
 
 
