@@ -46,7 +46,7 @@ contract FeeDistributor is Ownable {
         initialized = true;
     }
 
-    function distributeFees() public seeded {
+    function distributeFees() external seeded {
         uint balance = infinity.balanceOf(address(this));
 
         if (balance < 100) {
@@ -55,6 +55,7 @@ contract FeeDistributor is Ownable {
 
         uint liquidShare;
         uint burningShare;
+        uint secondaryShare;
 
         if (recipients.liquidVaultShare > 0) {
             liquidShare = recipients.liquidVaultShare.mul(balance).div(100);
@@ -70,9 +71,12 @@ contract FeeDistributor is Ownable {
             infinity.burn(burningShare);
         }
 
-        require(
-            infinity.transfer(recipients.secondaryAddress, balance.sub(liquidShare).sub(burningShare)),
+        secondaryShare = balance.sub(liquidShare).sub(burningShare);
+        if (secondaryShare > 0) {
+            require(
+            infinity.transfer(recipients.secondaryAddress, secondaryShare),
             "FeeDistributor: transfer to the secondary address failed"
         );
+        }
     }
 }

@@ -17,6 +17,8 @@ describe('LiquidVault', function () {
   const stakeDuration = 1;
   const donationShare = 10;
   const purchaseFee = 30;
+  const liquidVaultShare = 90;
+  const burnPercentage = 10;
 
   let accounts;
   let owner;
@@ -50,6 +52,10 @@ describe('LiquidVault', function () {
     infinity = await InfinityProtocol.deploy(uniswapRouter.address);
     await infinity.deployed();
 
+    const FeeDistributor = await ethers.getContractFactory('FeeDistributor');
+    feeDistributor = await FeeDistributor.deploy();
+    await feeDistributor.deployed();  
+
     const LiquidVault = await ethers.getContractFactory('LiquidVault');
     liquidVault = await LiquidVault.deploy();
     await liquidVault.deployed();
@@ -58,11 +64,20 @@ describe('LiquidVault', function () {
     pairAddress = await uniswapFactory.getPair(weth.address, infinity.address);
     uniswapPair = await ethers.getContractAt(UniswapV2Pair.abi, pairAddress);
 
+    await feeDistributor.seed(
+      infinity.address, 
+      liquidVault.address, 
+      feeReceiver.address,
+      liquidVaultShare,
+      burnPercentage
+    );
+
     await liquidVault.seed(
       stakeDuration,
       infinity.address,
       pairAddress,
       uniswapRouter.address,
+      feeDistributor.address,
       feeReceiver.address,
       donationShare,
       purchaseFee
@@ -88,6 +103,7 @@ describe('LiquidVault', function () {
       infinity.address,
       pairAddress,
       uniswapRouter.address,
+      feeDistributor.address,
       feeReceiver.address,
       donationShare,
       purchaseFee

@@ -7,6 +7,8 @@ async function main() {
   const stakeDuration = 1;
   const donationShare = 10;
   const purchaseFee = 30;
+  const liquidVaultShare = 60;
+  const burnPercentage = 10;
 
   const InfinityProtocol = await hardhat.ethers.getContractFactory("InfinityProtocol");
   const infinityProtocol = await InfinityProtocol.deploy(ROUTER);
@@ -17,24 +19,33 @@ async function main() {
   const LiquidVault = await hardhat.ethers.getContractFactory('LiquidVault');
   const liquidVault = await LiquidVault.deploy();
   await liquidVault.deployed();
-  await liquidVault.seed(
-    stakeDuration,
-    infinityProtocol.address,
-    UNISWAP_PAIR,
-    ROUTER,
-    FEE_RECEIVER,
-    donationShare,
-    purchaseFee
-  );
 
   console.log("LiquidVault deployed to: ", liquidVault.address);
 
   const FeeDistributor = await hardhat.ethers.getContractFactory("FeeDistributor");
   const feeDistributor = await FeeDistributor.deploy();
   await feeDistributor.deployed();
-  await feeDistributor.seed(infinityProtocol.address, vaultAddress);
 
   console.log("FeeDistributor deployed to:", feeDistributor.address);
+
+  await feeDistributor.seed(
+    infinityProtocol.address, 
+    liquidVault.address,
+    FEE_RECEIVER,
+    liquidVaultShare,
+    burnPercentage
+  );
+
+  await liquidVault.seed(
+    stakeDuration,
+    infinityProtocol.address,
+    UNISWAP_PAIR,
+    ROUTER,
+    feeDistributor.address,
+    FEE_RECEIVER,
+    donationShare,
+    purchaseFee
+  );
 }
 
 main()
