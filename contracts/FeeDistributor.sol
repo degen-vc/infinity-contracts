@@ -48,8 +48,9 @@ contract FeeDistributor is Ownable {
 
     function distributeFees() external seeded {
         uint balance = infinity.balanceOf(address(this));
+        uint minimumAmount = 1e8;
 
-        if (balance < 100) {
+        if (balance < minimumAmount) {
             return;
         }
 
