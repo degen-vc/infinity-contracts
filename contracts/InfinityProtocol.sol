@@ -39,8 +39,6 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
     uint private _tTradeCycle;
     uint private _tBurnCycle;
 
-    uint private transferredTokens;
-    uint private tokenBatchCount;
     uint private _BURN_FEE;
     uint private _FOT_FEE;
     bool private _feeSet;
