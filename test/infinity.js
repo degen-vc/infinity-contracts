@@ -740,5 +740,115 @@ const { expect } = require('chai');
 
     });
 
+    it('should be possible to transfer tokens via transferFrom, fees set to 5%, 2.5% - to burn and 2.5% fot, trade cycle updated', async function() {
+      const fee = bn(500);
+      const partFee = bn(250);
+
+      assertBNequal(await infinity.getBurnFee(), 0);
+      assertBNequal(await infinity.getFee(), 0);
+      await infinity.setInitialFee();
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
+
+      await infinity.setFeeReceiver(feeReceiver.address);
+      const amount = utils.parseUnits('100', baseUnit);
+      assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
+      assertBNequal(await infinity.balanceOf(user.address), 0);
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
+
+      assertBNequal(await infinity.getCycle(), 0);
+      assertBNequal(await infinity.getBurnCycle(), 0);
+      assertBNequal(await infinity.getTradedCycle(), 0);
+      assertBNequal(await infinity.totalBurn(), 0);
+
+      await infinity.approve(userTwo.address, amount);
+      await infinity.connect(userTwo).transferFrom(owner.address, user.address, amount);
+
+      assertBNequal(await infinity.getCycle(), 0);
+      assertBNequal(await infinity.getBurnCycle(), amount.mul(fee).div(HUNDRED_PERCENT));
+      assertBNequal(await infinity.getTradedCycle(), amount);
+      assertBNequal(await infinity.totalBurn(), amount.mul(partFee).div(HUNDRED_PERCENT));
+
+      assertBNequal(await infinity.balanceOf(owner.address), totalSupply.sub(amount));
+      assertBNequal(await infinity.balanceOf(user.address), amount.sub(amount.mul(fee).div(HUNDRED_PERCENT)));
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), amount.mul(partFee).div(HUNDRED_PERCENT));
+
+      assertBNequal(await infinity.totalSupply(), totalSupply.sub(amount.mul(partFee).div(HUNDRED_PERCENT)));
+    });
+
+    it('should NOT be possible to transfer tokens via transferFrom, if sender does not have enough allowance', async function() {
+      const fee = bn(500);
+      const partFee = bn(250);
+
+      assertBNequal(await infinity.getBurnFee(), 0);
+      assertBNequal(await infinity.getFee(), 0);
+      await infinity.setInitialFee();
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
+
+      await infinity.setFeeReceiver(feeReceiver.address);
+      const amount = utils.parseUnits('100', baseUnit);
+      assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
+      assertBNequal(await infinity.balanceOf(user.address), 0);
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
+
+      assertBNequal(await infinity.getCycle(), 0);
+      assertBNequal(await infinity.getBurnCycle(), 0);
+      assertBNequal(await infinity.getTradedCycle(), 0);
+      assertBNequal(await infinity.totalBurn(), 0);
+
+      await infinity.approve(userTwo.address, amount.sub(1));
+
+      await expect(infinity.connect(userTwo).transferFrom(owner.address, user.address, amount)).to.revertedWith('transfer amount exceeds allowance');
+
+      assertBNequal(await infinity.getCycle(), 0);
+      assertBNequal(await infinity.getBurnCycle(), 0);
+      assertBNequal(await infinity.getTradedCycle(), 0);
+      assertBNequal(await infinity.totalBurn(), 0);
+
+      assertBNequal(await infinity.balanceOf(user.address), 0);
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
+
+      assertBNequal(await infinity.totalSupply(), totalSupply);
+    });
+
+    it('should NOT be possible to transfer tokens via transferFrom, if spent all alowance', async function() {
+      const fee = bn(500);
+      const partFee = bn(250);
+
+      assertBNequal(await infinity.getBurnFee(), 0);
+      assertBNequal(await infinity.getFee(), 0);
+      await infinity.setInitialFee();
+      assertBNequal(await infinity.getBurnFee(), partFee);
+      assertBNequal(await infinity.getFee(), partFee);
+
+      await infinity.setFeeReceiver(feeReceiver.address);
+      const amount = utils.parseUnits('100', baseUnit);
+      assertBNequal(await infinity.balanceOf(owner.address), totalSupply);
+      assertBNequal(await infinity.balanceOf(user.address), 0);
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), 0);
+
+      assertBNequal(await infinity.getCycle(), 0);
+      assertBNequal(await infinity.getBurnCycle(), 0);
+      assertBNequal(await infinity.getTradedCycle(), 0);
+      assertBNequal(await infinity.totalBurn(), 0);
+
+      await infinity.approve(userTwo.address, amount);
+      await infinity.connect(userTwo).transferFrom(owner.address, user.address, amount);
+
+      assertBNequal(await infinity.getCycle(), 0);
+      assertBNequal(await infinity.getBurnCycle(), amount.mul(fee).div(HUNDRED_PERCENT));
+      assertBNequal(await infinity.getTradedCycle(), amount);
+      assertBNequal(await infinity.totalBurn(), amount.mul(partFee).div(HUNDRED_PERCENT));
+
+      assertBNequal(await infinity.balanceOf(owner.address), totalSupply.sub(amount));
+      assertBNequal(await infinity.balanceOf(user.address), amount.sub(amount.mul(fee).div(HUNDRED_PERCENT)));
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), amount.mul(partFee).div(HUNDRED_PERCENT));
+
+      assertBNequal(await infinity.totalSupply(), totalSupply.sub(amount.mul(partFee).div(HUNDRED_PERCENT)));
+
+      await expect(infinity.connect(userTwo).transferFrom(owner.address, user.address, amount)).to.revertedWith('transfer amount exceeds allowance');
+    });
+
 
   });
