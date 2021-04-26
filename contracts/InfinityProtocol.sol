@@ -21,7 +21,7 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
     address public router;
     uint public maxCycles;
 
-    string  private constant _NAME = "Infinity";
+    string  private constant _NAME = "infinityprotocol.io";
     string  private constant _SYMBOL = "INFINITY";
     uint8   private constant _DECIMALS = 8;
 
