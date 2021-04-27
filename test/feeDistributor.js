@@ -11,7 +11,6 @@ const { expect } = require('chai');
     const router = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
     const ganache = new Ganache();
     const baseUnit = 8;
-    const totalSupply = utils.parseUnits('100000000', baseUnit);
     const HUNDRED_PERCENT = bn('100');
 
     const liquidVaultShare = 60;
@@ -136,7 +135,7 @@ const { expect } = require('chai');
     });
 
     it('should distribute fees according to seeded parameters', async function() {
-      const distributeAmount = utils.parseUnits('10000', 8);
+      const distributeAmount = utils.parseUnits('10000', baseUnit);
       await feeDistributor.seed(
         infinity.address, 
         vaultFake.address, 
@@ -156,5 +155,35 @@ const { expect } = require('chai');
 
       assertBNequal(await infinity.balanceOf(vaultFake.address), expectedVaultBalance);
       assertBNequal(await infinity.balanceOf(feeReceiver.address), expectedSecondaryAddress);
+    });
+
+    it('should distribute fees according to seeded parameters + fees are set on Infinity token', async function() {
+      const distributeAmount = utils.parseUnits('10000', baseUnit);
+      await feeDistributor.seed(
+        infinity.address, 
+        vaultFake.address, 
+        feeReceiver.address,
+        liquidVaultShare,
+        burnPercentage
+      );
+
+      await infinity.setFeeReceiver(feeDistributor.address);
+      await infinity.transfer(feeDistributor.address, distributeAmount);
+      assertBNequal(await infinity.balanceOf(feeDistributor.address), distributeAmount);
+
+      await infinity.setInitialFee();
+      const infinityFot = await infinity.getFee();
+      assertBNequal(infinityFot, 250);
+
+      const expectedVaultBalance = bn(liquidVaultShare).mul(distributeAmount).div(HUNDRED_PERCENT);
+      const expectedBurnPercentage = bn(burnPercentage).mul(distributeAmount).div(HUNDRED_PERCENT);
+      const expectedSecondaryAddress = bn(distributeAmount).sub(expectedBurnPercentage).sub(expectedVaultBalance);
+
+      await expect(feeDistributor.distributeFees())
+        .to.emit(infinity, 'Transfer')
+        .withArgs(feeDistributor.address, zeroAddress, expectedBurnPercentage);
+      
+      assertBNequal(await infinity.balanceOf(vaultFake.address), expectedVaultBalance.sub(expectedVaultBalance.mul(500).div(10000)));
+      assertBNequal(await infinity.balanceOf(feeReceiver.address), expectedSecondaryAddress.sub(expectedSecondaryAddress.mul(500).div(10000)));
     });
   });

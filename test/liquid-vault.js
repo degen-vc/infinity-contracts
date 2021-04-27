@@ -183,7 +183,7 @@ describe('LiquidVault', function () {
   it('should purchase LP tokens with 0% fees and non-empty FeeDistributor', async function() {
     const purchaseValue = utils.parseEther('1');
     const transferToLiquidVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
-    const transferToDistributor = utils.parseUnits('5000', 8);
+    const transferToDistributor = utils.parseUnits('5000', baseUnit);
 
     await infinity.transfer(liquidVault.address, transferToLiquidVault);
     assertBNequal(await infinity.balanceOf(liquidVault.address), transferToLiquidVault);
@@ -193,6 +193,8 @@ describe('LiquidVault', function () {
 
     await infinity.setFeeReceiver(feeDistributor.address);
     await infinity.transfer(feeDistributor.address, transferToDistributor);
+    const distributorBalance = await infinity.balanceOf(feeDistributor.address);
+    assertBNequal(distributorBalance, transferToDistributor);
 
     const feeReceiverBalanceBefore = await ethers.provider.getBalance(feeReceiver.address);
     const purchaseLP = await liquidVault.purchaseLP({ value: purchaseValue });
@@ -217,8 +219,12 @@ describe('LiquidVault', function () {
     assertBNequal(estimatedReceiverAmount, percentageAmount);
 
     const expectedInfinityToReceiver = transferToDistributor.mul('10').div('100');
+    const expectedInfinity = transferToDistributor.mul(liquidVaultShare + burnPercentage).div('100');
+    const feeDistributorBalanceAfter = await infinity.balanceOf(feeDistributor.address);
     const feeReceiverInfinityBalanceAfter = await infinity.balanceOf(feeReceiver.address);
+    
     assertBNequal(feeReceiverInfinityBalanceAfter, expectedInfinityToReceiver);
+    assertBNequal(feeDistributorBalanceAfter, distributorBalance.sub(expectedInfinityToReceiver).sub(expectedInfinity));
   });
 
   it('should revert purchaseLP() if too much ETH provided', async function() {
