@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.7.4;
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./IERC20.sol";
+import "./IBEP20.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IWETH.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
@@ -147,7 +147,7 @@ contract LiquidVault is Ownable {
           );
       }
 
-      uint balance = IERC20(config.infinityToken).balanceOf(address(this));
+      uint balance = IBEP20(config.infinityToken).balanceOf(address(this));
       require(
           balance >= infinityRequired,
           "LiquidVault: insufficient INFINITY tokens in LiquidVault"
@@ -156,7 +156,7 @@ contract LiquidVault is Ownable {
       IWETH(config.weth).deposit{ value: exchangeValue }();
       address tokenPairAddress = address(config.tokenPair);
       IWETH(config.weth).transfer(tokenPairAddress, exchangeValue);
-      IERC20(config.infinityToken).transfer(
+      IBEP20(config.infinityToken).transfer(
           tokenPairAddress,
           infinityRequired
       );

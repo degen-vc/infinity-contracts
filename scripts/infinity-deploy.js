@@ -26,7 +26,7 @@ async function main() {
   console.log("FeeDistributor deployed to:", feeDistributor.address);
 
   await feeDistributor.seed(
-    infinityProtocol.address, 
+    infinityProtocol.address,
     liquidVault.address,
     FEE_RECEIVER,
     liquidVaultShare,

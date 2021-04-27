@@ -25,7 +25,11 @@ module.exports = {
     kovan: {
       url: `https://kovan.infura.io/v3/${API_KEY}`,
       accounts: [PRIVATE_KEY]
-    }
+    },
+    bscTestnet: {
+      url: `https://data-seed-prebsc-1-s1.binance.org:8545`,
+      accounts: [PRIVATE_KEY]
+    },
   },
   solidity: {
     version: "0.7.4",
