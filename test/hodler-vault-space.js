@@ -173,4 +173,23 @@ describe('HodlerVaultSpace', function () {
     assertBNequal(feeReceiverBalanceAfter.sub(feeReceiverBalanceBefore), estimatedReceiverAmount);
     assertBNequal(estimatedReceiverAmount, percentageAmount);
   });
+
+  it('should revert claimLP() if there is no locked LP', async () => {
+    await expect(hodlerVault.claimLP())
+      .to.be.revertedWith('HodlerVaultSpace: nothing to claim.');
+  });
+
+  it('should revert claimLP() if the lock period is not over', async function() {
+    const transferToHodlerVault = utils.parseEther('10');
+    const purchaseValue = utils.parseUnits('5000', baseUnit);
+
+    await owner.sendTransaction({ to: hodlerVault.address, value: transferToHodlerVault });
+    assertBNequal(await ethers.provider.getBalance(hodlerVault.address), transferToHodlerVault);
+
+
+    await infinity.approve(hodlerVault.address, ethers.constants.MaxUint256);
+    const purchaseLP = await hodlerVault.purchaseLP(purchaseValue);
+    await expect(hodlerVault.claimLP())
+      .to.be.revertedWith('HodlerVaultSpace: LP still locked.');
+  });
 });
