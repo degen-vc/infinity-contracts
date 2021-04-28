@@ -122,4 +122,16 @@ describe('HodlerVaultSpace', function () {
     assertBNequal(config.donationShare, donationShare);
     assertBNequal(config.purchaseFee, purchaseFee);
   });
+
+  it('should revert purchaseLP() if there are 0 ETH on the balance', async function() {
+    const purchaseValue = utils.parseUnits('100', baseUnit);
+    await infinity.approve(hodlerVault.address, ethers.constants.MaxUint256);
+    await expect(hodlerVault.purchaseLP(purchaseValue))
+      .to.be.revertedWith('HodlerVaultSpace: insufficient ETH on HodlerVaultSpace');
+  });
+
+  it('should revert purchaseLP() if 0 INFINITY is passed', async function() {
+    await expect(hodlerVault.purchaseLP(0))
+      .to.be.revertedWith('HodlerVaultSpace: INFINITY required to mint LP');
+  });
 });
