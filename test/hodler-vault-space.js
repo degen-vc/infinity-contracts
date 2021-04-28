@@ -188,8 +188,69 @@ describe('HodlerVaultSpace', function () {
 
 
     await infinity.approve(hodlerVault.address, ethers.constants.MaxUint256);
-    const purchaseLP = await hodlerVault.purchaseLP(purchaseValue);
+    await hodlerVault.purchaseLP(purchaseValue);
     await expect(hodlerVault.claimLP())
       .to.be.revertedWith('HodlerVaultSpace: LP still locked.');
+  });
+
+  it('should be able to claim 2 batches after 2 purchases and 1 3rd party purchase with 0% fees', async function() {
+    const transferToHodlerVault = utils.parseEther('50');
+    const purchaseValue = utils.parseUnits('5000', baseUnit);
+
+    await owner.sendTransaction({ to: hodlerVault.address, value: transferToHodlerVault });
+    assertBNequal(await ethers.provider.getBalance(hodlerVault.address), transferToHodlerVault);
+
+
+    await infinity.approve(hodlerVault.address, ethers.constants.MaxUint256);
+
+    await hodlerVault.purchaseLP(purchaseValue);
+    await hodlerVault.purchaseLP(purchaseValue);
+
+    await infinity.transfer(user.address, purchaseValue);
+    await infinity.connect(user).approve(hodlerVault.address, ethers.constants.MaxUint256);
+    await hodlerVault.connect(user).purchaseLP(purchaseValue);
+
+    assertBNequal(await hodlerVault.lockedLPLength(owner.address), 2);
+    assertBNequal(await hodlerVault.lockedLPLength(user.address), 1);
+
+    const lockedLP1 = await hodlerVault.getLockedLP(owner.address, 0);
+    const lockedLP2 = await hodlerVault.getLockedLP(owner.address, 1);
+    const lockedLP3 = await hodlerVault.getLockedLP(user.address, 0);
+
+    const stakeDuration = await hodlerVault.getStakeDuration();
+    const lpBalanceBefore = await uniswapPair.balanceOf(owner.address);
+
+    await ganache.setTime((bn(lockedLP3[2]).add(stakeDuration)).toNumber());
+    const claimLP1 = await hodlerVault.claimLP();
+    const receipt1 = await claimLP1.wait();
+    const amount1 = receipt1.events[0].args[1];
+    const exitFee1 = receipt1.events[0].args[3];
+    const claimLP2 = await hodlerVault.claimLP();
+    const receipt2 = await claimLP2.wait();
+    const amount2 = receipt2.events[0].args[1];
+    const exitFee2 = receipt2.events[0].args[3];
+    const expectedLpAmount = amount1.sub(exitFee1).add(amount2.sub(exitFee2));
+    const lpBalanceAfter = await uniswapPair.balanceOf(owner.address);
+
+    assertBNequal(lpBalanceAfter.sub(lpBalanceBefore), expectedLpAmount);
+    assertBNequal(amount1, lockedLP1[1]);
+    assertBNequal(amount2, lockedLP2[1]);
+
+    // an attempt to claim nonexistent batch
+    await expect(hodlerVault.claimLP())
+      .to.be.revertedWith('HodlerVaultSpace: nothing to claim.');
+
+    const lpBalanceBefore3 = await uniswapPair.balanceOf(user.address);
+    const claimLP3 = await hodlerVault.connect(user).claimLP();
+    const receipt3 = await claimLP3.wait();
+    const holder3 = receipt3.events[0].args[0];
+    const amount3 = receipt3.events[0].args[1];
+    const exitFee3 = receipt3.events[0].args[3];
+    const expectedLpAmount3 = amount3.sub(exitFee3);
+    const lpBalanceAfter3 = await uniswapPair.balanceOf(user.address);
+
+    assert.equal(holder3, user.address);
+    assertBNequal(amount3, lockedLP3[1]);
+    assertBNequal(lpBalanceAfter3.sub(lpBalanceBefore3), expectedLpAmount3);
   });
 });
