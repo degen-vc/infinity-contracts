@@ -11,8 +11,8 @@ describe('AcceleratorVaultSpace', function () {
   const ganache = new Ganache();
   const baseUnit = 8;
 
-  const acceleratorityInfinityAmount = utils.parseUnits('10000', baseUnit);
-  const acceleratorityETHAmount = utils.parseEther('10');
+  const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
+  const liquidityETHAmount = utils.parseEther('10');
   
   const stakeDuration = 1;
   const donationShare = 10;
@@ -85,15 +85,15 @@ describe('AcceleratorVaultSpace', function () {
       purchaseFee
     );
 
-    await infinity.approve(uniswapRouter.address, acceleratorityInfinityAmount);
+    await infinity.approve(uniswapRouter.address, liquidityInfinityAmount);
     await expect(uniswapRouter.addLiquidityETH(
       infinity.address,
-      acceleratorityInfinityAmount,
+      liquidityInfinityAmount,
       0,
       0,
       owner.address,
       new Date().getTime() + 3000,
-      { value: acceleratorityETHAmount }
+      { value: liquidityETHAmount }
     )).to.emit(uniswapPair, 'Mint');
 
     await ganache.snapshot();
