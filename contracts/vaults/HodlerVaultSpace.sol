@@ -10,6 +10,13 @@ import "../interfaces/IERC20.sol";
 contract HodlerVaultSpace is Ownable {
     using SafeMath for uint;
 
+    /** Emitted when purchaseLP() is called to track INFINITY amounts */
+    event InfinityTransferred(
+        address from,
+        uint amount,
+        uint percentageAmount
+    );
+
     /** Emitted when purchaseLP() is called and LP tokens minted */
     event LPQueued(
         address hodler,
@@ -221,6 +228,7 @@ contract HodlerVaultSpace is Ownable {
             block.timestamp
         );
 
+        emit InfinityTransferred(msg.sender, netInfinity, infinityFee);
     }
 
     //pops latest LP if older than period

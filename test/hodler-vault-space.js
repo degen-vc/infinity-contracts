@@ -134,4 +134,43 @@ describe('HodlerVaultSpace', function () {
     await expect(hodlerVault.purchaseLP(0))
       .to.be.revertedWith('HodlerVaultSpace: INFINITY required to mint LP');
   });
+
+  it('should revert purchaseLP() if there is not enough approval', async function() {
+    const purchaseValue = utils.parseUnits('100', baseUnit);
+    await expect(hodlerVault.purchaseLP(purchaseValue))
+      .to.be.revertedWith('HodlerVaultSpace: Not enough INFINITY tokens allowance');
+  });
+
+  it('should purchase LP tokens with 0% fees', async function() {
+    const transferToHodlerVault = utils.parseEther('10');
+    const purchaseValue = utils.parseUnits('5000', baseUnit);
+
+    await owner.sendTransaction({ to: hodlerVault.address, value: transferToHodlerVault });
+    assertBNequal(await ethers.provider.getBalance(hodlerVault.address), transferToHodlerVault);
+
+
+    const feeReceiverBalanceBefore = await infinity.balanceOf(acceleratorVaultFake.address);
+    await infinity.approve(hodlerVault.address, ethers.constants.MaxUint256);
+    const purchaseLP = await hodlerVault.purchaseLP(purchaseValue);
+    const receipt = await purchaseLP.wait();
+
+    const lockedLpLength = await hodlerVault.lockedLPLength(owner.address);
+    assertBNequal(lockedLpLength, 1);
+
+    const lockedLP = await hodlerVault.getLockedLP(owner.address, 0);
+    const amount = receipt.events[9].args[1];
+    const timestamp = receipt.events[9].args[4];
+    assert.equal(lockedLP[0], owner.address);
+    assertBNequal(lockedLP[1], amount);
+    assertBNequal(lockedLP[2], timestamp);
+
+    const { feeReceiver: expectedFeeReceiver } = await hodlerVault.config();
+    const { percentageAmount } = receipt.events[10].args;
+    const estimatedReceiverAmount = (purchaseValue * purchaseFee) / 100;
+    const feeReceiverBalanceAfter = await infinity.balanceOf(acceleratorVaultFake.address);
+
+    assert.equal(expectedFeeReceiver, acceleratorVaultFake.address);
+    assertBNequal(feeReceiverBalanceAfter.sub(feeReceiverBalanceBefore), estimatedReceiverAmount);
+    assertBNequal(estimatedReceiverAmount, percentageAmount);
+  });
 });
