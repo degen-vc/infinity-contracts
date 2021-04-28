@@ -7,7 +7,8 @@
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
     "deploy:kovan": "npx hardhat run scripts/infinity-deploy.js --network kovan",
-    "deploy:bscTestnet": "npx hardhat run scripts/infinity-deploy.js --network bscTestnet"
+    "deploy:bscTestnet": "npx hardhat run scripts/infinity-deploy.js --network bscTestnet",
+    "deploy:bscTestnetOracle": "npx hardhat run scripts/oracle-deploy.js --network bscTestnet"
   },
   "keywords": [],
   "author": "",

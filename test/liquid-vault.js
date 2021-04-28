@@ -32,6 +32,7 @@ describe('LiquidVault', function () {
   let uniswapRouter;
   let uniswapPair;
   let pairAddress;
+  let uniswapOracle;
 
   beforeEach('setup others', async function() {
     accounts = await ethers.getSigners();
@@ -54,7 +55,7 @@ describe('LiquidVault', function () {
 
     const FeeDistributor = await ethers.getContractFactory('FeeDistributor');
     feeDistributor = await FeeDistributor.deploy();
-    await feeDistributor.deployed();  
+    await feeDistributor.deployed();
 
     const LiquidVault = await ethers.getContractFactory('LiquidVault');
     liquidVault = await LiquidVault.deploy();
@@ -82,6 +83,13 @@ describe('LiquidVault', function () {
       donationShare,
       purchaseFee
     );
+
+    const PriceOracle = await ethers.getContractFactory('PriceOracle');
+    uniswapOracle = await PriceOracle.deploy(pairAddress, infinity.address, weth.address);
+    await uniswapOracle.deployed();
+
+    await liquidVault.setOracleAddress(uniswapOracle.address);
+
 
     await infinity.approve(uniswapRouter.address, liquidityInfinityAmount);
     await expect(uniswapRouter.addLiquidityETH(

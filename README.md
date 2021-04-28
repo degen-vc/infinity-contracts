@@ -20,3 +20,8 @@ npm run test
 ```
 npm run compile
 ```
+
+## Verify Contracts
+```
+npx hardhat verify --network bscTestnet address "address" "address" "address"
+```

@@ -7,6 +7,10 @@ import "@uniswap/v2-periphery/contracts/interfaces/IWETH.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "./IFeeDistributor.sol";
 
+interface IPriceOracle {
+    function update() external returns(uint);
+}
+
 contract LiquidVault is Ownable {
   /** Emitted when purchaseLP() is called to track ETH amounts */
   event EthTransferred(
@@ -45,6 +49,7 @@ contract LiquidVault is Ownable {
       IUniswapV2Router02 uniswapRouter;
       IUniswapV2Pair tokenPair;
       IFeeDistributor feeDistributor;
+      IPriceOracle uniswapOracle;
       address weth;
       address payable feeReceiver;
       uint32 stakeDuration;
@@ -122,6 +127,11 @@ contract LiquidVault is Ownable {
       config.purchaseFee = purchaseFee;
   }
 
+    function setOracleAddress(IPriceOracle _uniswapOracle) external onlyOwner {
+        require(address(_uniswapOracle) != address(0), "Zero address not allowed");
+        config.uniswapOracle = _uniswapOracle;
+    }
+
   function purchaseLPFor(address beneficiary) public payable lock {
       config.feeDistributor.distributeFees();
       require(msg.value > 0, "LiquidVault: ETH required to mint INFINITY LP");
@@ -163,6 +173,7 @@ contract LiquidVault is Ownable {
 
       uint liquidityCreated = config.tokenPair.mint(address(this));
       config.feeReceiver.transfer(feeValue);
+      config.uniswapOracle.update();
 
       lockedLP[beneficiary].push(
           LPbatch({
