@@ -24,6 +24,7 @@ describe('AcceleratorVaultSpace', function () {
   let owner;
   let user;
   let ethHodler;
+  let feeReceiver;
 
   let weth;
   let infinity;
@@ -39,6 +40,7 @@ describe('AcceleratorVaultSpace', function () {
     user = accounts[1];
     ethHodler = accounts[2];
     userTwo = accounts[3];
+    feeReceiver = accounts[4];
 
     afterEach('revert', function() { return ganache.revert(); });
 
@@ -67,7 +69,7 @@ describe('AcceleratorVaultSpace', function () {
     await feeDistributor.seed(
       infinity.address, 
       acceleratorVault.address, 
-      ethHodler.address,
+      feeReceiver.address,
       acceleratorVaultShare,
       burnPercentage
     );
@@ -180,4 +182,160 @@ describe('AcceleratorVaultSpace', function () {
       .to.be.revertedWith('AcceleratorVaultSpace: ETH required to mint INFINITY LP');
   });
 
+  it('should purchase LP tokens with 0% fees and non-empty FeeDistributor', async function() {
+    const purchaseValue = utils.parseEther('1');
+    const transferToAcceleratorVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
+    const transferToDistributor = utils.parseUnits('5000', baseUnit);
+
+    await infinity.transfer(acceleratorVault.address, transferToAcceleratorVault);
+    assertBNequal(await infinity.balanceOf(acceleratorVault.address), transferToAcceleratorVault);
+
+    const feeReceiverInfinityBalance = await infinity.balanceOf(feeReceiver.address);
+    assertBNequal(feeReceiverInfinityBalance, 0);
+
+    await infinity.setFeeReceiver(feeDistributor.address);
+    await infinity.transfer(feeDistributor.address, transferToDistributor);
+    const distributorBalance = await infinity.balanceOf(feeDistributor.address);
+    assertBNequal(distributorBalance, transferToDistributor);
+
+    const ethHodlerBalanceBefore = await ethers.provider.getBalance(ethHodler.address);
+    const purchaseLP = await acceleratorVault.purchaseLP({ value: purchaseValue });
+    const receipt = await purchaseLP.wait();
+
+    const lockedLpLength = await acceleratorVault.lockedLPLength(owner.address);
+    assertBNequal(lockedLpLength, 1);
+
+    const lockedLP = await acceleratorVault.getLockedLP(owner.address, 0);
+    const { amount, timestamp } = receipt.events[9].args;
+    assert.equal(lockedLP[0], owner.address);
+    assertBNequal(lockedLP[1], amount);
+    assertBNequal(lockedLP[2], timestamp);
+
+    const { ethHodler: expectedEthHodler } = await acceleratorVault.config();
+    const { percentageAmount } = receipt.events[10].args;
+    const estimatedHodlerAmount = (purchaseValue * purchaseFee) / 100;
+    const ethHodlerBalanceAfter = await ethers.provider.getBalance(ethHodler.address);
+
+    assert.equal(expectedEthHodler, ethHodler.address);
+    assertBNequal(ethHodlerBalanceAfter.sub(ethHodlerBalanceBefore), estimatedHodlerAmount);
+    assertBNequal(estimatedHodlerAmount, percentageAmount);
+
+    const expectedInfinityToReceiver = transferToDistributor.mul('10').div('100');
+    const expectedInfinity = transferToDistributor.mul(acceleratorVaultShare + burnPercentage).div('100');
+    const feeDistributorBalanceAfter = await infinity.balanceOf(feeDistributor.address);
+    const feeReceiverInfinityBalanceAfter = await infinity.balanceOf(feeReceiver.address);
+    
+    assertBNequal(feeReceiverInfinityBalanceAfter, expectedInfinityToReceiver);
+    assertBNequal(feeDistributorBalanceAfter, distributorBalance.sub(expectedInfinityToReceiver).sub(expectedInfinity));
+  });
+
+  it('should revert purchaseLP() if too much ETH provided', async function() {
+    const purchaseValue = utils.parseEther('10');
+    const transferToAcceleratorVault = utils.parseUnits('200', baseUnit); // 200 tokens
+
+    await infinity.transfer(acceleratorVault.address, transferToAcceleratorVault);
+    assertBNequal(await infinity.balanceOf(acceleratorVault.address), transferToAcceleratorVault);
+
+    await expect(acceleratorVault.purchaseLP({ value: purchaseValue }))
+      .to.be.revertedWith('AcceleratorVaultSpace: insufficient INFINITY tokens in AcceleratorVault');
+  });
+
+  it('should revert claimLP() if there is no locked LP', async () => {
+    await expect(acceleratorVault.claimLP())
+      .to.be.revertedWith('AcceleratorVaultSpace: nothing to claim.');
+  });
+
+  it('should revert claimLP() if the lock period is not over', async function() {
+    const purchaseValue = utils.parseEther('1');
+    const transferToAcceleratorVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
+
+    await infinity.transfer(acceleratorVault.address, transferToAcceleratorVault);
+    assertBNequal(await infinity.balanceOf(acceleratorVault.address), transferToAcceleratorVault);
+
+    await acceleratorVault.purchaseLP({ value: purchaseValue });
+    await expect(acceleratorVault.claimLP())
+      .to.be.revertedWith('AcceleratorVaultSpace: LP still locked.');
+  });
+
+  it('should be able to claim 1 batch after 1 purchase with 0% fees', async function() {
+    const purchaseValue = utils.parseEther('1');
+    const transferToAcceleratorVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
+
+    await infinity.transfer(acceleratorVault.address, transferToAcceleratorVault);
+    assertBNequal(await infinity.balanceOf(acceleratorVault.address), transferToAcceleratorVault);
+
+    await acceleratorVault.purchaseLP({ value: purchaseValue });
+    const lockedLP = await acceleratorVault.getLockedLP(owner.address, 0);
+    const { donationShare } = await acceleratorVault.config();
+    const stakeDuration = await acceleratorVault.getStakeDuration();
+    const lpBalanceBefore = await uniswapPair.balanceOf(owner.address);
+
+    await ganache.setTime((bn(lockedLP[2]).add(stakeDuration)).toNumber());
+    const claimLP = await acceleratorVault.claimLP();
+    const receipt = await claimLP.wait();
+
+    const { holder, amount, exitFee, claimed } = receipt.events[0].args;
+    const estimatedFeeAmount = lockedLP[1].mul(donationShare).div(bn('100'));
+    const lpBalanceAfter = await uniswapPair.balanceOf(owner.address);
+
+    assert.strictEqual(holder, owner.address);
+    assert.isTrue(claimed);
+    assertBNequal(amount, lockedLP[1]);
+    assertBNequal(exitFee, estimatedFeeAmount);
+    assertBNequal(amount.sub(exitFee), lpBalanceAfter.sub(lpBalanceBefore));
+  });
+
+  it('should be able to claim 2 batches after 2 purchases and 1 3rd party purchase with 0% fees', async function() {
+    const purchaseValue = utils.parseEther('1');
+    const transferToAcceleratorVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
+
+    await infinity.transfer(acceleratorVault.address, transferToAcceleratorVault);
+    assertBNequal(await infinity.balanceOf(acceleratorVault.address), transferToAcceleratorVault);
+
+    await acceleratorVault.purchaseLP({ value: purchaseValue });
+    await acceleratorVault.purchaseLP({ value: purchaseValue });
+    await acceleratorVault.connect(user).purchaseLP({ value: purchaseValue });
+
+    assertBNequal(await acceleratorVault.lockedLPLength(owner.address), 2);
+    assertBNequal(await acceleratorVault.lockedLPLength(user.address), 1);
+
+    const lockedLP1 = await acceleratorVault.getLockedLP(owner.address, 0);
+    const lockedLP2 = await acceleratorVault.getLockedLP(owner.address, 1);
+    const lockedLP3 = await acceleratorVault.getLockedLP(user.address, 0);
+
+    const stakeDuration = await acceleratorVault.getStakeDuration();
+    const lpBalanceBefore = await uniswapPair.balanceOf(owner.address);
+
+    await ganache.setTime((bn(lockedLP3[2]).add(stakeDuration)).toNumber());
+    const claimLP1 = await acceleratorVault.claimLP();
+    const receipt1 = await claimLP1.wait();
+    const { amount: amount1, exitFee: exitFee1 } = receipt1.events[0].args;
+    
+    const claimLP2 = await acceleratorVault.claimLP();
+    const receipt2 = await claimLP2.wait();
+    const { amount: amount2, exitFee: exitFee2 } = receipt2.events[0].args;
+    
+    const expectedLpAmount = amount1.sub(exitFee1).add(amount2.sub(exitFee2));
+    const lpBalanceAfter = await uniswapPair.balanceOf(owner.address);
+
+    assertBNequal(lpBalanceAfter.sub(lpBalanceBefore), expectedLpAmount);
+    assertBNequal(amount1, lockedLP1[1]);
+    assertBNequal(amount2, lockedLP2[1]);
+
+    // an attempt to claim nonexistent batch
+    await expect(acceleratorVault.claimLP())
+      .to.be.revertedWith('AcceleratorVaultSpace: nothing to claim.');
+
+    const lpBalanceBefore3 = await uniswapPair.balanceOf(user.address);
+    const claimLP3 = await acceleratorVault.connect(user).claimLP();
+    const receipt3 = await claimLP3.wait();
+    const { holder: holder3, amount: amount3, exitFee: exitFee3 } = receipt3.events[0].args;
+
+    const expectedLpAmount3 = amount3.sub(exitFee3);
+    const lpBalanceAfter3 = await uniswapPair.balanceOf(user.address);
+
+    assert.equal(holder3, user.address);
+    assertBNequal(amount3, lockedLP3[1]);
+    assertBNequal(lpBalanceAfter3.sub(lpBalanceBefore3), expectedLpAmount3);
+  });
 });
