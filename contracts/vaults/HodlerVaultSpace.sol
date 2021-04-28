@@ -200,20 +200,8 @@ contract HodlerVaultSpace is Ownable {
         if (infinityFee > 0 && config.feeReceiver != address(0)) {
             config.infinityToken.transferFrom(
                 msg.sender,
-                address(this),
-                infinityFee
-            );
-
-            address[] memory path = new address[](2);
-            path[0] = address(config.infinityToken);
-            path[1] = address(config.weth);
-
-            config.uniswapRouter.swapExactTokensForETH(
-                infinityFee,
-                0,
-                path,
                 config.feeReceiver,
-                block.timestamp
+                infinityFee
             );
         }
 
