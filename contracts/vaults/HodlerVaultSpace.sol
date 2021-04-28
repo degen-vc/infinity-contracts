@@ -6,7 +6,6 @@ import "@uniswap/v2-periphery/contracts/interfaces/IWETH.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import "../interfaces/IERC20.sol";
-import "../interfaces/IFeeDistributor.sol";
 
 contract HodlerVaultSpace is Ownable {
     using SafeMath for uint;
@@ -156,18 +155,13 @@ contract HodlerVaultSpace is Ownable {
         config.feeReceiver = feeReceiver;
     }
 
-    function approveOnUni() external {
-        config.infinityToken.approve(address(config.uniswapRouter), uint(-1));
-    }
-
-
     function purchaseLP(uint amount) external lock {
         require(amount > 0, "HodlerVaultSpace: INFINITY required to mint LP");
         require(config.infinityToken.balanceOf(msg.sender) >= amount, "HodlerVaultSpace: Not enough INFINITY tokens");
         require(config.infinityToken.allowance(msg.sender, address(this)) >= amount, "HodlerVaultSpace: Not enough INFINITY tokens allowance");
 
         uint infinityFee = amount.mul(config.purchaseFee).div(100);
-        uint netUba = amount.sub(infinityFee);
+        uint netInfinity = amount.sub(infinityFee);
 
         (uint reserve1, uint reserve2, ) = config.tokenPair.getReserves();
 
@@ -175,13 +169,13 @@ contract HodlerVaultSpace is Ownable {
 
         if (address(config.infinityToken) > address(config.weth)) {
             ethRequired = config.uniswapRouter.quote(
-                netUba,
+                netInfinity,
                 reserve2,
                 reserve1
             );
         } else {
             ethRequired = config.uniswapRouter.quote(
-                netUba,
+                netInfinity,
                 reserve1,
                 reserve2
             );
@@ -198,7 +192,7 @@ contract HodlerVaultSpace is Ownable {
         config.infinityToken.transferFrom(
             msg.sender,
             tokenPairAddress,
-            netUba
+            netInfinity
         );
 
         uint liquidityCreated = config.tokenPair.mint(address(this));
@@ -235,7 +229,7 @@ contract HodlerVaultSpace is Ownable {
             msg.sender,
             liquidityCreated,
             ethRequired,
-            netUba,
+            netInfinity,
             block.timestamp
         );
 
