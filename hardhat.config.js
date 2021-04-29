@@ -30,6 +30,10 @@ module.exports = {
       url: `https://data-seed-prebsc-1-s1.binance.org:8545`,
       accounts: [PRIVATE_KEY]
     },
+    bscMainnet: {
+      url: `https://bsc-dataseed1.ninicoin.io`,
+      accounts: [PRIVATE_KEY]
+    },
   },
   solidity: {
     version: "0.7.4",
