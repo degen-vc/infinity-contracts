@@ -121,6 +121,12 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
         return true;
     }
 
+    function setRouter(address _router) external onlyOwner() returns (bool) {
+        require(_router != address(0), "Zero address not allowed");
+        router = _router;
+        return true;
+    }
+
     function totalBurnWithFees() public view returns (uint) {
         return _tBurnTotal.add(_tFeeTotal);
     }

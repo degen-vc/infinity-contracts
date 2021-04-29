@@ -4,8 +4,8 @@ require('dotenv').config()
 const { ROUTER, FEE_RECEIVER } = process.env;
 
 async function main() {
-  const liquidVaultShare = 60;
-  const burnPercentage = 10;
+  const liquidVaultShare = 100;
+  const burnPercentage = 0;
 
   const InfinityProtocol = await hardhat.ethers.getContractFactory("InfinityProtocol");
   const infinityProtocol = await InfinityProtocol.deploy(ROUTER);
@@ -32,6 +32,8 @@ async function main() {
     liquidVaultShare,
     burnPercentage
   );
+
+  await infinityProtocol.setFeeReceiver(feeDistributor.address);
 }
 
 main()
