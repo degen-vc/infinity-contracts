@@ -171,9 +171,10 @@ contract LiquidVault is Ownable {
           infinityRequired
       );
 
-      uint liquidityCreated = config.tokenPair.mint(address(this));
       config.feeReceiver.transfer(feeValue);
       config.uniswapOracle.update();
+
+      uint liquidityCreated = config.tokenPair.mint(address(this));
 
       lockedLP[beneficiary].push(
           LPbatch({
