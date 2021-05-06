@@ -3,7 +3,7 @@ pragma solidity 0.7.4;
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/lib/contracts/libraries/FixedPoint.sol';
 import '@uniswap/v2-periphery/contracts/libraries/UniswapV2OracleLibrary.sol';
-import "./IBEP20.sol";
+import "./interfaces/IBEP20.sol";
 
 
 contract PriceOracle {

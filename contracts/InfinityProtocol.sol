@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/GSN/Context.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "./IInfinityProtocol.sol";
+import "./interfaces/IInfinityProtocol.sol";
 
 contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
 
