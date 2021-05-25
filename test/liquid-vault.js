@@ -337,5 +337,58 @@ describe('LiquidVault', function () {
     assertBNequal(lpBalanceAfter3.sub(lpBalanceBefore3), expectedLpAmount3);
   });
 
+  it('should be able to claim 1 batch after 1 purchase with 0% fees and remove liquidity from uniswap', async function() {
+    const purchaseValue = utils.parseEther('1');
+    const transferToLiquidVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
+
+    await infinity.transfer(liquidVault.address, transferToLiquidVault);
+    assertBNequal(await infinity.balanceOf(liquidVault.address), transferToLiquidVault);
+    
+    await liquidVault.purchaseLP({ value: purchaseValue });
+    const lockedLP = await liquidVault.getLockedLP(owner.address, 0);
+    const { donationShare } = await liquidVault.config();
+    const stakeDuration = await liquidVault.getStakeDuration();
+    const lpBalanceBeforeClaim = await uniswapPair.balanceOf(owner.address);
+
+    await ganache.setTime((bn(lockedLP[2]).add(stakeDuration)).toNumber());
+    const claimLP = await liquidVault.claimLP();
+    const receipt = await claimLP.wait();
+
+    const { holder, amount, exitFee, claimed } = receipt.events[0].args;
+    const estimatedFeeAmount = lockedLP[1].mul(donationShare).div(bn('100'));
+    const lpBalanceAfterClaim = await uniswapPair.balanceOf(owner.address);
+
+    assert.strictEqual(holder, owner.address);
+    assert.isTrue(claimed);
+    assertBNequal(amount, lockedLP[1]);
+    assertBNequal(exitFee, estimatedFeeAmount);
+    assertBNequal(amount.sub(exitFee), lpBalanceAfterClaim.sub(lpBalanceBeforeClaim));
+
+    infinityBalanceBefore = await infinity.balanceOf(accounts[0].address)
+    wethBalanceBefore = await weth.balanceOf(accounts[0].address)
+
+    await uniswapPair.approve(uniswapRouter.address, lpBalanceAfterClaim)
+    await expect(uniswapRouter.removeLiquidity(
+      infinity.address, // address tokenA
+      weth.address, //address tokenB
+      lpBalanceAfterClaim, // uint liquidity,
+      0, // uint amountAMin,
+      0, // uint amountBMin,
+      owner.address, // address to
+      new Date().getTime() + 3000, // uint deadline
+    )).to.emit(uniswapPair, 'Burn')
+
+    infinityBalanceAfter = await infinity.balanceOf(accounts[0].address)
+    wethBalanceAfter = await weth.balanceOf(accounts[0].address)
+
+    assert.isTrue(wethBalanceAfter.gt(wethBalanceBefore))
+    assert.isTrue(infinityBalanceAfter.gt(infinityBalanceBefore))
+
+    const lpBalanceAfterRemoveLiquidity = await uniswapPair.balanceOf(owner.address);
+
+    assertBNequal(lpBalanceAfterRemoveLiquidity, 0)
+
+  });
+
   //TODO: add tests for the force unlock and for token with fees
 });
