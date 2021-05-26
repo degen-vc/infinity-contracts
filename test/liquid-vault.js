@@ -364,8 +364,8 @@ describe('LiquidVault', function () {
     assertBNequal(exitFee, estimatedFeeAmount);
     assertBNequal(amount.sub(exitFee), lpBalanceAfterClaim.sub(lpBalanceBeforeClaim));
 
-    infinityBalanceBefore = await infinity.balanceOf(accounts[0].address)
-    wethBalanceBefore = await weth.balanceOf(accounts[0].address)
+    infinityBalanceBefore = await infinity.balanceOf(owner.address)
+    wethBalanceBefore = await weth.balanceOf(owner.address)
 
     await uniswapPair.approve(uniswapRouter.address, lpBalanceAfterClaim)
     await expect(uniswapRouter.removeLiquidity(
@@ -378,8 +378,8 @@ describe('LiquidVault', function () {
       new Date().getTime() + 3000, // uint deadline
     )).to.emit(uniswapPair, 'Burn')
 
-    infinityBalanceAfter = await infinity.balanceOf(accounts[0].address)
-    wethBalanceAfter = await weth.balanceOf(accounts[0].address)
+    infinityBalanceAfter = await infinity.balanceOf(owner.address)
+    wethBalanceAfter = await weth.balanceOf(owner.address)
 
     assert.isTrue(wethBalanceAfter.gt(wethBalanceBefore))
     assert.isTrue(infinityBalanceAfter.gt(infinityBalanceBefore))
