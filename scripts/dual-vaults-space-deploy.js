@@ -8,7 +8,7 @@ async function main() {
   const acceleratorVaultSpace = await AcceleratorVaultSpace.deploy();
   await acceleratorVaultSpace.deployed();
 
-  acceleratorVaultSpace.setOracleAddress(PRICE_ORACLE);
+  await acceleratorVaultSpace.setOracleAddress(PRICE_ORACLE);
 
   console.log("AcceleratorVaultSpace deployed to: ", acceleratorVaultSpace.address);
 
