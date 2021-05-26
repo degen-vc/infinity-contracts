@@ -7,7 +7,7 @@ import "@uniswap/v2-periphery/contracts/interfaces/IWETH.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "../interfaces/IFeeDistributor.sol";
 
-contract LiquidVaultPower is Ownable {
+contract PowerLiquidVault is Ownable {
   /** Emitted when purchaseLP() is called to track ETH amounts */
   event EthTransferred(
       address from,
@@ -56,7 +56,7 @@ contract LiquidVaultPower is Ownable {
   bool private locked;
 
   modifier lock {
-      require(!locked, "LiquidVault: reentrancy violation");
+      require(!locked, "PowerLiquidVault: reentrancy violation");
       locked = true;
       _;
       locked = false;
@@ -98,7 +98,7 @@ contract LiquidVaultPower is Ownable {
   function setFeeReceiverAddress(address payable feeReceiver) public onlyOwner {
       require(
           feeReceiver != address(0),
-          "LiquidVault: ETH receiver is zero address"
+          "PowerLiquidVault: ETH receiver is zero address"
       );
 
       config.feeReceiver = feeReceiver;
@@ -110,11 +110,11 @@ contract LiquidVaultPower is Ownable {
   {
       require(
           donationShare <= 100,
-          "LiquidVault: donation share % between 0 and 100"
+          "PowerLiquidVault: donation share % between 0 and 100"
       );
       require(
           purchaseFee <= 100,
-          "LiquidVault: purchase fee share % between 0 and 100"
+          "PowerLiquidVault: purchase fee share % between 0 and 100"
       );
 
       config.stakeDuration = duration * 1 days;
@@ -124,7 +124,7 @@ contract LiquidVaultPower is Ownable {
 
   function purchaseLPFor(address beneficiary) public payable lock {
       config.feeDistributor.distributeFees();
-      require(msg.value > 0, "LiquidVault: ETH required to mint INFINITY LP");
+      require(msg.value > 0, "PowerLiquidVault: ETH required to mint INFINITY LP");
 
       uint feeValue = (config.purchaseFee * msg.value) / 100;
       uint exchangeValue = msg.value - feeValue;
@@ -150,7 +150,7 @@ contract LiquidVaultPower is Ownable {
       uint balance = IERC20(config.infinityToken).balanceOf(address(this));
       require(
           balance >= infinityRequired,
-          "LiquidVault: insufficient INFINITY tokens in LiquidVault"
+          "PowerLiquidVault: insufficient INFINITY tokens in PowerLiquidVault"
       );
 
       IWETH(config.weth).deposit{ value: exchangeValue }();
@@ -184,7 +184,7 @@ contract LiquidVaultPower is Ownable {
       emit EthTransferred(msg.sender, exchangeValue, feeValue);
   }
 
-  //send ETH to match with INFINITY tokens in LiquidVault
+  //send ETH to match with INFINITY tokens in PowerLiquidVault
   function purchaseLP() public payable {
       purchaseLPFor(msg.sender);
   }
@@ -193,12 +193,12 @@ contract LiquidVaultPower is Ownable {
       uint next = queueCounter[msg.sender];
       require(
           next < lockedLP[msg.sender].length,
-          "LiquidVault: nothing to claim."
+          "PowerLiquidVault: nothing to claim."
       );
       LPbatch storage batch = lockedLP[msg.sender][next];
       require(
           block.timestamp - batch.timestamp > getStakeDuration(),
-          "LiquidVault: LP still locked."
+          "PowerLiquidVault: LP still locked."
       );
       next++;
       queueCounter[msg.sender] = next;
@@ -207,11 +207,11 @@ contract LiquidVaultPower is Ownable {
       emit LPClaimed(msg.sender, batch.amount, block.timestamp, donation, batch.claimed);
       require(
           config.tokenPair.transfer(address(0), donation),
-          "LiquidVault: donation transfer failed in LP claim."
+          "PowerLiquidVault: donation transfer failed in LP claim."
       );
       require(
           config.tokenPair.transfer(batch.holder, batch.amount - donation),
-          "LiquidVault: transfer failed in LP claim."
+          "PowerLiquidVault: transfer failed in LP claim."
       );
   }
 
