@@ -337,5 +337,9 @@ describe('PowerLiquidVault', function () {
     assertBNequal(lpBalanceAfter3.sub(lpBalanceBefore3), expectedLpAmount3);
   });
 
+  // should be possible change all liquid vault ETH to INFINITY via buyPressure
+  // should be possible change all liquid vault ETH to INFINITY via buyPressure for any account
+  // should NOT be possible ETH to INFINITY via buyPressure if there is less than 0.0001 ETH on LV balance
+
   //TODO: add tests for the force unlock and for token with fees
 });

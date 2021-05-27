@@ -216,7 +216,7 @@ contract PowerLiquidVault is Ownable {
 
   function buyPressure() external {
       require(address(this).balance > 0, "PowerLiquidVault: ETH amount must be > 0.");
-      
+
       address[] memory path = new address[](2);
             path[0] = address(config.weth);
             path[1] = address(config.infinityToken);
