@@ -438,8 +438,6 @@ describe('LiquidVault', function () {
 
     const ethUserBalanceBeforeRemoveLiquidity = await ethers.provider.getBalance(user.address);
 
-    assert.notEqual(await uniswapPair.balanceOf(user.address), 0);
-
     await uniswapPair.connect(user).approve(uniswapRouter.address, lpBalanceAfterClaim);
     await expect(uniswapRouter.connect(user).removeLiquidityETH(
       infinity.address, 
