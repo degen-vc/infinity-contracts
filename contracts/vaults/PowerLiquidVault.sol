@@ -162,7 +162,6 @@ contract PowerLiquidVault is Ownable {
       );
 
       uint liquidityCreated = config.tokenPair.mint(address(this));
-      config.feeReceiver.transfer(feeValue);
 
       lockedLP[beneficiary].push(
           LPbatch({
@@ -213,6 +212,21 @@ contract PowerLiquidVault is Ownable {
           config.tokenPair.transfer(batch.holder, batch.amount - donation),
           "PowerLiquidVault: transfer failed in LP claim."
       );
+  }
+
+  function buyPressure() external {
+      require(address(this).balance > 0, "PowerLiquidVault: ETH amount must be > 0.");
+      
+      address[] memory path = new address[](2);
+            path[0] = address(config.weth);
+            path[1] = address(config.infinityToken);
+
+            config.uniswapRouter.swapExactETHForTokens{ value: address(this).balance }(
+                0,
+                path,
+                address(this),
+                block.timestamp
+            );
   }
 
   function lockedLPLength(address holder) public view returns (uint) {
