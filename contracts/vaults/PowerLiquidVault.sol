@@ -51,7 +51,7 @@ contract PowerLiquidVault is Ownable {
       uint8 donationShare; //0-100
       uint8 purchaseFee; //0-100
   }
-  
+  uint public constant MINIMUM_BUY_PRESSURE_AMOUNT = 1e14; //0,0001 ETH minimum
   bool public forceUnlock;
   bool private locked;
 
@@ -215,13 +215,17 @@ contract PowerLiquidVault is Ownable {
   }
 
   function buyPressure() external {
-      require(address(this).balance > 0, "PowerLiquidVault: ETH amount must be > 0.");
-      
+      uint weiBalance = address(this).balance;
+      require(
+          weiBalance > MINIMUM_BUY_PRESSURE_AMOUNT, 
+          "PowerLiquidVault: ETH amount must be > 0,0001 ETH."
+      );
+
       address[] memory path = new address[](2);
             path[0] = address(config.weth);
             path[1] = address(config.infinityToken);
 
-            config.uniswapRouter.swapExactETHForTokens{ value: address(this).balance }(
+            config.uniswapRouter.swapExactETHForTokens{ value: weiBalance }(
                 0,
                 path,
                 address(this),
