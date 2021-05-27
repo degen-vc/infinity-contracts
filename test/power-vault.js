@@ -196,7 +196,7 @@ describe('PowerLiquidVault', function () {
     const distributorBalance = await infinity.balanceOf(feeDistributor.address);
     assertBNequal(distributorBalance, transferToDistributor);
 
-    const feeReceiverBalanceBefore = await ethers.provider.getBalance(feeReceiver.address);
+    const feeReceiverBalanceBefore = await ethers.provider.getBalance(liquidVault.address);
     const purchaseLP = await liquidVault.purchaseLP({ value: purchaseValue });
     const receipt = await purchaseLP.wait();
 
@@ -212,7 +212,7 @@ describe('PowerLiquidVault', function () {
     const { feeReceiver: expectedFeeReceiver } = await liquidVault.config();
     const { percentageAmount } = receipt.events[10].args;
     const estimatedReceiverAmount = (purchaseValue * purchaseFee) / 100;
-    const feeReceiverBalanceAfter = await ethers.provider.getBalance(feeReceiver.address);
+    const feeReceiverBalanceAfter = await ethers.provider.getBalance(liquidVault.address);
 
     assert.equal(expectedFeeReceiver, feeReceiver.address);
     assertBNequal(feeReceiverBalanceAfter.sub(feeReceiverBalanceBefore), estimatedReceiverAmount);
