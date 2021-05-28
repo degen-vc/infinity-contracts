@@ -78,7 +78,6 @@ describe('PowerLiquidVault', function () {
       pairAddress,
       uniswapRouter.address,
       feeDistributor.address,
-      feeReceiver.address,
       donationShare,
       purchaseFee
     );
@@ -104,7 +103,6 @@ describe('PowerLiquidVault', function () {
       pairAddress,
       uniswapRouter.address,
       feeDistributor.address,
-      feeReceiver.address,
       donationShare,
       purchaseFee
     )).to.be.revertedWith('Ownable: caller is not the owner');
@@ -118,11 +116,6 @@ describe('PowerLiquidVault', function () {
     )).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  it('should revert setFeeReceiverAddress() if caller is not the owner', async function() {
-    await expect(liquidVault.connect(user).setFeeReceiverAddress(feeReceiver.address))
-      .to.be.revertedWith('Ownable: caller is not the owner');
-  });
-
   it('should revert enableLPForceUnlock() if caller is not the owner', async function() {
     await expect(liquidVault.connect(user).enableLPForceUnlock())
       .to.be.revertedWith('Ownable: caller is not the owner');
@@ -134,7 +127,6 @@ describe('PowerLiquidVault', function () {
     assert.strictEqual(config.infinityToken, infinity.address);
     assert.strictEqual(config.tokenPair, pairAddress);
     assert.strictEqual(config.uniswapRouter, uniswapRouter.address);
-    assert.strictEqual(config.feeReceiver, feeReceiver.address);
     assert.strictEqual(config.weth, weth.address);
     assertBNequal(config.stakeDuration, 86400);
     assertBNequal(config.donationShare, donationShare);
@@ -160,13 +152,6 @@ describe('PowerLiquidVault', function () {
 
     assert.isTrue(await liquidVault.forceUnlock());
     assertBNequal(stakeDuration, 0);
-  });
-
-  it('should set a new fee receiver address', async function() {
-    await liquidVault.setFeeReceiverAddress(user.address);
-    const { feeReceiver } = await liquidVault.config();
-
-    assert.equal(feeReceiver, user.address);
   });
 
   it('should revert purchaseLP() if there are 0 INFINITY on the balance', async function() {
@@ -196,7 +181,7 @@ describe('PowerLiquidVault', function () {
     const distributorBalance = await infinity.balanceOf(feeDistributor.address);
     assertBNequal(distributorBalance, transferToDistributor);
 
-    const feeReceiverBalanceBefore = await ethers.provider.getBalance(liquidVault.address);
+    const lvBalanceBefore = await ethers.provider.getBalance(liquidVault.address);
     const purchaseLP = await liquidVault.purchaseLP({ value: purchaseValue });
     const receipt = await purchaseLP.wait();
 
@@ -209,13 +194,11 @@ describe('PowerLiquidVault', function () {
     assertBNequal(lockedLP[1], amount);
     assertBNequal(lockedLP[2], timestamp);
 
-    const { feeReceiver: expectedFeeReceiver } = await liquidVault.config();
     const { percentageAmount } = receipt.events[10].args;
     const estimatedReceiverAmount = (purchaseValue * purchaseFee) / 100;
-    const feeReceiverBalanceAfter = await ethers.provider.getBalance(liquidVault.address);
+    const lvBalanceAfter = await ethers.provider.getBalance(liquidVault.address);
 
-    assert.equal(expectedFeeReceiver, feeReceiver.address);
-    assertBNequal(feeReceiverBalanceAfter.sub(feeReceiverBalanceBefore), estimatedReceiverAmount);
+    assertBNequal(lvBalanceAfter.sub(lvBalanceBefore), estimatedReceiverAmount);
     assertBNequal(estimatedReceiverAmount, percentageAmount);
 
     const expectedInfinityToReceiver = transferToDistributor.mul('10').div('100');

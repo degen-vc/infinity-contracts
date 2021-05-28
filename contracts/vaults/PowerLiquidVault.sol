@@ -46,7 +46,6 @@ contract PowerLiquidVault is Ownable {
       IUniswapV2Pair tokenPair;
       IFeeDistributor feeDistributor;
       address weth;
-      address payable feeReceiver;
       uint32 stakeDuration;
       uint8 donationShare; //0-100
       uint8 purchaseFee; //0-100
@@ -73,7 +72,6 @@ contract PowerLiquidVault is Ownable {
       address uniswapPair,
       address uniswapRouter,
       address feeDistributor,
-      address payable feeReceiver,
       uint8 donationShare, // LP Token
       uint8 purchaseFee // ETH
   ) public onlyOwner {
@@ -82,7 +80,6 @@ contract PowerLiquidVault is Ownable {
       config.tokenPair = IUniswapV2Pair(uniswapPair);
       config.feeDistributor = IFeeDistributor(feeDistributor);
       config.weth = config.uniswapRouter.WETH();
-      setFeeReceiverAddress(feeReceiver);
       setParameters(duration, donationShare, purchaseFee);
   }
 
@@ -93,15 +90,6 @@ contract PowerLiquidVault is Ownable {
   // Could not be canceled if activated
   function enableLPForceUnlock() public onlyOwner {
       forceUnlock = true;
-  }
-
-  function setFeeReceiverAddress(address payable feeReceiver) public onlyOwner {
-      require(
-          feeReceiver != address(0),
-          "PowerLiquidVault: ETH receiver is zero address"
-      );
-
-      config.feeReceiver = feeReceiver;
   }
 
   function setParameters(uint32 duration, uint8 donationShare, uint8 purchaseFee)
