@@ -320,9 +320,62 @@ describe('PowerLiquidVault', function () {
     assertBNequal(lpBalanceAfter3.sub(lpBalanceBefore3), expectedLpAmount3);
   });
 
-  // should be possible change all liquid vault ETH to INFINITY via buyPressure
-  // should be possible change all liquid vault ETH to INFINITY via buyPressure for any account
-  // should NOT be possible ETH to INFINITY via buyPressure if there is less than 0.0001 ETH on LV balance
+  it('should be possible change all power vault ETH to INFINITY via buyPressure', async function() {
+    const purchaseValue = utils.parseEther('1');
+    const transferToLiquidVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
+
+    await infinity.transfer(liquidVault.address, transferToLiquidVault);
+    assertBNequal(await infinity.balanceOf(liquidVault.address), transferToLiquidVault);
+
+    await liquidVault.purchaseLP({ value: purchaseValue });
+
+    const ethPowerVaultBalanceBuyPressureBefore = await ethers.provider.getBalance(liquidVault.address);
+    assert.isTrue(ethPowerVaultBalanceBuyPressureBefore.gt(0));
+    const infinityPowerVaultBalanceBuyPressureBefore = await infinity.balanceOf(liquidVault.address);
+
+    await liquidVault.buyPressure();
+
+    const infinityPowerVaultBalanceBuyPressureAfter = await infinity.balanceOf(liquidVault.address);
+    const ethPowerVaultBalanceBuyPressureAfter = await ethers.provider.getBalance(liquidVault.address);
+
+    assertBNequal(ethPowerVaultBalanceBuyPressureAfter, 0);
+    assert.isTrue(infinityPowerVaultBalanceBuyPressureAfter.gt(infinityPowerVaultBalanceBuyPressureBefore)); 
+  });
+
+  it('should be possible change all power vault ETH to INFINITY via buyPressure for any account', async function() {
+    const purchaseValue = utils.parseEther('1');
+    const transferToLiquidVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
+
+    await infinity.transfer(liquidVault.address, transferToLiquidVault);
+    assertBNequal(await infinity.balanceOf(liquidVault.address), transferToLiquidVault);
+
+    await liquidVault.purchaseLP({ value: purchaseValue });
+
+    const ethPowerVaultBalanceBuyPressureBefore = await ethers.provider.getBalance(liquidVault.address);
+    assert.isTrue(ethPowerVaultBalanceBuyPressureBefore.gt(0));
+    const infinityPowerVaultBalanceBuyPressureBefore = await infinity.balanceOf(liquidVault.address);
+
+    await liquidVault.connect(user).buyPressure();
+
+    const infinityPowerVaultBalanceBuyPressureAfter = await infinity.balanceOf(liquidVault.address);
+    const ethPowerVaultBalanceBuyPressureAfter = await ethers.provider.getBalance(liquidVault.address);
+
+    assertBNequal(ethPowerVaultBalanceBuyPressureAfter, 0);
+    assert.isTrue(infinityPowerVaultBalanceBuyPressureAfter.gt(infinityPowerVaultBalanceBuyPressureBefore)); 
+  });
+
+  it('should NOT be possible ETH to INFINITY via buyPressure if there is less than 0.0001 ETH on PV balance', async function() {
+    const purchaseValue = utils.parseEther('0.00009');
+    const transferToLiquidVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
+
+    await infinity.transfer(liquidVault.address, transferToLiquidVault);
+    assertBNequal(await infinity.balanceOf(liquidVault.address), transferToLiquidVault);
+
+    await liquidVault.purchaseLP({ value: purchaseValue });
+
+    await expect(liquidVault.buyPressure())
+      .to.be.revertedWith('PowerLiquidVault: ETH amount must be > 0,0001 ETH.')
+  });
 
   //TODO: add tests for the force unlock and for token with fees
 });
