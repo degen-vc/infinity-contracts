@@ -6,7 +6,8 @@
   "scripts": {
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
-    "deploy:kovan": "npx hardhat run scripts/infinity-deploy.js --network kovan"
+    "deploy:kovan": "npx hardhat run scripts/infinity-deploy.js --network kovan",
+    "powerDeploy:kovan": "npx hardhat run scripts/power-vault-deploy.js --network kovan"
   },
   "keywords": [],
   "author": "",
