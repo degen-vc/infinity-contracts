@@ -11,7 +11,8 @@
     "deploy:bscTestnetOracle": "npx hardhat run scripts/oracle-deploy.js --network bscTestnet",
     "deploy:bscMainnet": "npx hardhat run scripts/infinity-deploy.js --network bscMainnet",
     "deploy:bscMainnetOracle": "npx hardhat run scripts/oracle-deploy.js --network bscMainnet",
-    "deploy:bscMainnetSpace": "npx hardhat run scripts/dual-vaults-space-deploy.js --network bscMainnet"
+    "deploy:bscMainnetSpace": "npx hardhat run scripts/dual-vaults-space-deploy.js --network bscMainnet",
+    "deploy:bscPower": "npx hardhat run scripts/power-vault-deploy.js --network bscMainnet"
   },
   "keywords": [],
   "author": "",
