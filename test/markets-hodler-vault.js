@@ -4,7 +4,7 @@ const deployUniswap = require('./helpers/deployUniswap');
 const { expect, assert, util } = require('chai');
 const { BigNumber, utils } = require('ethers');
 
-describe('MarketsHodlerVault', function () {
+describe('HodlerVaultSpace', function () {
   const bn = (input) => BigNumber.from(input);
   const assertBNequal = (bnOne, bnTwo) => assert.strictEqual(bnOne.toString(), bnTwo.toString());
 
@@ -50,7 +50,7 @@ describe('MarketsHodlerVault', function () {
     infinity = await InfinityProtocol.deploy(uniswapRouter.address);
     await infinity.deployed();
 
-    const HodlerVault = await ethers.getContractFactory('MarketsHodlerVault');
+    const HodlerVault = await ethers.getContractFactory('HodlerVaultSpace');
     hodlerVault = await HodlerVault.deploy();
     await hodlerVault.deployed();
 
@@ -127,18 +127,18 @@ describe('MarketsHodlerVault', function () {
     const purchaseValue = utils.parseUnits('100', baseUnit);
     await infinity.approve(hodlerVault.address, ethers.constants.MaxUint256);
     await expect(hodlerVault.purchaseLP(purchaseValue))
-      .to.be.revertedWith('MarketsHodlerVault: insufficient ETH on MarketsHodlerVault');
+      .to.be.revertedWith('HodlerVaultSpace: insufficient ETH on HodlerVaultSpace');
   });
 
   it('should revert purchaseLP() if 0 INFINITY is passed', async function() {
     await expect(hodlerVault.purchaseLP(0))
-      .to.be.revertedWith('MarketsHodlerVault: INFINITY required to mint LP');
+      .to.be.revertedWith('HodlerVaultSpace: INFINITY required to mint LP');
   });
 
   it('should revert purchaseLP() if there is not enough approval', async function() {
     const purchaseValue = utils.parseUnits('100', baseUnit);
     await expect(hodlerVault.purchaseLP(purchaseValue))
-      .to.be.revertedWith('MarketsHodlerVault: Not enough INFINITY tokens allowance');
+      .to.be.revertedWith('HodlerVaultSpace: Not enough INFINITY tokens allowance');
   });
 
   it('should purchase LP tokens with 0% fees', async function() {
@@ -176,7 +176,7 @@ describe('MarketsHodlerVault', function () {
 
   it('should revert claimLP() if there is no locked LP', async () => {
     await expect(hodlerVault.claimLP())
-      .to.be.revertedWith('MarketsHodlerVault: nothing to claim.');
+      .to.be.revertedWith('HodlerVaultSpace: nothing to claim.');
   });
 
   it('should revert claimLP() if the lock period is not over', async function() {
@@ -190,7 +190,7 @@ describe('MarketsHodlerVault', function () {
     await infinity.approve(hodlerVault.address, ethers.constants.MaxUint256);
     await hodlerVault.purchaseLP(purchaseValue);
     await expect(hodlerVault.claimLP())
-      .to.be.revertedWith('MarketsHodlerVault: LP still locked.');
+      .to.be.revertedWith('HodlerVaultSpace: LP still locked.');
   });
 
   it('should be able to claim 2 batches after 2 purchases and 1 3rd party purchase with 0% fees', async function() {
@@ -238,7 +238,7 @@ describe('MarketsHodlerVault', function () {
 
     // an attempt to claim nonexistent batch
     await expect(hodlerVault.claimLP())
-      .to.be.revertedWith('MarketsHodlerVault: nothing to claim.');
+      .to.be.revertedWith('HodlerVaultSpace: nothing to claim.');
 
     const lpBalanceBefore3 = await uniswapPair.balanceOf(user.address);
     const claimLP3 = await hodlerVault.connect(user).claimLP();
