@@ -22,6 +22,7 @@ describe('MarketsHodlerVault', function () {
   let owner;
   let user;
   let acceleratorVaultFake;
+  let registryFake;
 
   let weth;
   let infinity;
@@ -58,9 +59,14 @@ describe('MarketsHodlerVault', function () {
     pairAddress = await uniswapFactory.getPair(weth.address, infinity.address);
     uniswapPair = await ethers.getContractAt(UniswapV2Pair.abi, pairAddress);
 
+    const MarketsRegistryFake = await ethers.getContractFactory('MarketsRegistryFake');
+    registryFake = await MarketsRegistryFake.deploy();
+    await registryFake.deployed();
+
     await hodlerVault.seed(
       stakeDuration,
       infinity.address,
+      registryFake.address,
       pairAddress,
       uniswapRouter.address,
       acceleratorVaultFake.address,
@@ -85,6 +91,7 @@ describe('MarketsHodlerVault', function () {
     await expect(hodlerVault.connect(user).seed(
       stakeDuration,
       infinity.address,
+      registryFake.address,
       pairAddress,
       uniswapRouter.address,
       acceleratorVaultFake.address,
@@ -253,4 +260,191 @@ describe('MarketsHodlerVault', function () {
     assertBNequal(amount3, lockedLP3[1]);
     assertBNequal(lpBalanceAfter3.sub(lpBalanceBefore3), expectedLpAmount3);
   });
+
+  describe('Registry recover', function() {
+    it('should be possible to topup weth balance on LV from MarketsRegistry via registryRecover', async function() {
+      const recoverValue = utils.parseEther('0.0001');
+      const oneEth = utils.parseEther('1');
+
+      assertBNequal(await weth.balanceOf(owner.address), 0);
+      await weth.deposit({ value: oneEth });
+      assertBNequal(await weth.balanceOf(owner.address), oneEth);
+
+      await weth.transfer(registryFake.address, recoverValue);
+
+      assertBNequal(await weth.balanceOf(registryFake.address), recoverValue);
+      assertBNequal(await weth.balanceOf(hodlerVault.address), 0);
+      assertBNequal(await ethers.provider.getBalance(hodlerVault.address), 0)
+
+
+      await hodlerVault.registryRecover();
+
+      assertBNequal(await weth.balanceOf(registryFake.address), 0);
+      assertBNequal(await weth.balanceOf(hodlerVault.address), 0);
+      assertBNequal(await ethers.provider.getBalance(hodlerVault.address), recoverValue);
+    });
+
+    it('should NOT be possible to topup weth balance on LV from MarketsRegistry via registryRecover if registry balance less than min 0.0001', async function() {
+      const recoverValue = utils.parseEther('0.00009');
+      const oneEth = utils.parseEther('1');
+
+      assertBNequal(await weth.balanceOf(owner.address), 0);
+      await weth.deposit({ value: oneEth });
+      assertBNequal(await weth.balanceOf(owner.address), oneEth);
+
+      await weth.transfer(registryFake.address, recoverValue);
+
+      assertBNequal(await weth.balanceOf(registryFake.address), recoverValue);
+      assertBNequal(await weth.balanceOf(hodlerVault.address), 0);
+      assertBNequal(await ethers.provider.getBalance(hodlerVault.address), 0)
+
+
+      await hodlerVault.registryRecover();
+
+      assertBNequal(await weth.balanceOf(registryFake.address), recoverValue);
+      assertBNequal(await weth.balanceOf(hodlerVault.address), 0);
+      assertBNequal(await ethers.provider.getBalance(hodlerVault.address), 0);
+    });
+
+    it('should be possible to topup weth balance on LV from MarketsRegistry via registryRecover if some fee goes to secondary address', async function() {
+      const recoverValue = utils.parseEther('0.0001');
+      const oneEth = utils.parseEther('1');
+
+      assertBNequal(await weth.balanceOf(owner.address), 0);
+      await weth.deposit({ value: oneEth });
+      assertBNequal(await weth.balanceOf(owner.address), oneEth);
+
+      await weth.transfer(registryFake.address, recoverValue);
+
+      assertBNequal(await weth.balanceOf(registryFake.address), recoverValue);
+      assertBNequal(await weth.balanceOf(hodlerVault.address), 0);
+      assertBNequal(await ethers.provider.getBalance(hodlerVault.address), 0)
+
+      await registryFake.enableSecondaryReceiver(accounts[5].address);
+
+      await hodlerVault.registryRecover();
+
+      assertBNequal(await weth.balanceOf(registryFake.address), 0);
+      assertBNequal(await weth.balanceOf(hodlerVault.address), 0);
+      assertBNequal(await ethers.provider.getBalance(hodlerVault.address), recoverValue.mul(80).div(100));
+    });
+
+    it('should be possible to topup weth balance on LV from MarketsRegistry inside purchaseLP', async function() {
+      const recoverValue = utils.parseEther('0.0001');
+      const oneEth = utils.parseEther('1');
+
+      assertBNequal(await weth.balanceOf(owner.address), 0);
+      await weth.deposit({ value: oneEth });
+      assertBNequal(await weth.balanceOf(owner.address), oneEth);
+
+      await weth.transfer(registryFake.address, recoverValue);
+
+      const transferToHodlerVault = utils.parseEther('10');
+      const purchaseValue = utils.parseUnits('5000', baseUnit);
+
+      await owner.sendTransaction({ to: hodlerVault.address, value: transferToHodlerVault });
+      assertBNequal(await ethers.provider.getBalance(hodlerVault.address), transferToHodlerVault);
+
+      const feeReceiverBalanceBefore = await infinity.balanceOf(acceleratorVaultFake.address);
+      await infinity.approve(hodlerVault.address, ethers.constants.MaxUint256);
+
+
+
+      assertBNequal(await weth.balanceOf(registryFake.address), recoverValue);
+      assertBNequal(await weth.balanceOf(hodlerVault.address), 0);
+
+      const purchaseLP = await hodlerVault.purchaseLP(purchaseValue);
+
+      const hodlerBalanceAfterPurchaseLP = utils.parseEther('6.5');
+      assertBNequal(await weth.balanceOf(registryFake.address), 0);
+      assertBNequal(await weth.balanceOf(hodlerVault.address), 0);
+      assertBNequal(await ethers.provider.getBalance(hodlerVault.address), hodlerBalanceAfterPurchaseLP.add(recoverValue));
+
+
+
+
+
+      const receipt = await purchaseLP.wait();
+
+      const lockedLpLength = await hodlerVault.lockedLPLength(owner.address);
+      assertBNequal(lockedLpLength, 1);
+
+      const lockedLP = await hodlerVault.getLockedLP(owner.address, 0);
+      const amount = receipt.events[11].args[1];
+      const timestamp = receipt.events[11].args[4];
+      assert.equal(lockedLP[0], owner.address);
+      assertBNequal(lockedLP[1], amount);
+      assertBNequal(lockedLP[2], timestamp);
+
+      const { feeReceiver: expectedFeeReceiver } = await hodlerVault.config();
+      const { percentageAmount } = receipt.events[12].args;
+      const estimatedReceiverAmount = (purchaseValue * purchaseFee) / 100;
+      const feeReceiverBalanceAfter = await infinity.balanceOf(acceleratorVaultFake.address);
+
+      assert.equal(expectedFeeReceiver, acceleratorVaultFake.address);
+      assertBNequal(feeReceiverBalanceAfter.sub(feeReceiverBalanceBefore), estimatedReceiverAmount);
+      assertBNequal(estimatedReceiverAmount, percentageAmount);
+
+    });
+
+    it('should NOT topup weth balance on LV from MarketsRegistry inside purchaseLP if registry balance less than min 0.0001', async function() {
+      const recoverValue = utils.parseEther('0.00009');
+      const oneEth = utils.parseEther('1');
+
+      assertBNequal(await weth.balanceOf(owner.address), 0);
+      await weth.deposit({ value: oneEth });
+      assertBNequal(await weth.balanceOf(owner.address), oneEth);
+
+      await weth.transfer(registryFake.address, recoverValue);
+
+      const transferToHodlerVault = utils.parseEther('10');
+      const purchaseValue = utils.parseUnits('5000', baseUnit);
+
+      await owner.sendTransaction({ to: hodlerVault.address, value: transferToHodlerVault });
+      assertBNequal(await ethers.provider.getBalance(hodlerVault.address), transferToHodlerVault);
+
+      const feeReceiverBalanceBefore = await infinity.balanceOf(acceleratorVaultFake.address);
+      await infinity.approve(hodlerVault.address, ethers.constants.MaxUint256);
+
+
+
+      assertBNequal(await weth.balanceOf(registryFake.address), recoverValue);
+      assertBNequal(await weth.balanceOf(hodlerVault.address), 0);
+
+      const purchaseLP = await hodlerVault.purchaseLP(purchaseValue);
+
+      const hodlerBalanceAfterPurchaseLP = utils.parseEther('6.5');
+      assertBNequal(await weth.balanceOf(registryFake.address), recoverValue);
+      assertBNequal(await weth.balanceOf(hodlerVault.address), 0);
+      assertBNequal(await ethers.provider.getBalance(hodlerVault.address), hodlerBalanceAfterPurchaseLP);
+
+
+
+
+
+      const receipt = await purchaseLP.wait();
+
+      const lockedLpLength = await hodlerVault.lockedLPLength(owner.address);
+      assertBNequal(lockedLpLength, 1);
+
+      const lockedLP = await hodlerVault.getLockedLP(owner.address, 0);
+      const amount = receipt.events[9].args[1];
+      const timestamp = receipt.events[9].args[4];
+      assert.equal(lockedLP[0], owner.address);
+      assertBNequal(lockedLP[1], amount);
+      assertBNequal(lockedLP[2], timestamp);
+
+      const { feeReceiver: expectedFeeReceiver } = await hodlerVault.config();
+      const { percentageAmount } = receipt.events[10].args;
+      const estimatedReceiverAmount = (purchaseValue * purchaseFee) / 100;
+      const feeReceiverBalanceAfter = await infinity.balanceOf(acceleratorVaultFake.address);
+
+      assert.equal(expectedFeeReceiver, acceleratorVaultFake.address);
+      assertBNequal(feeReceiverBalanceAfter.sub(feeReceiverBalanceBefore), estimatedReceiverAmount);
+      assertBNequal(estimatedReceiverAmount, percentageAmount);
+
+    });
+
+  });
+
 });

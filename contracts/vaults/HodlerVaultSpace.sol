@@ -78,7 +78,7 @@ contract HodlerVaultSpace is Ownable {
 
         (uint reserve1, uint reserve2,) = config.tokenPair.getReserves();
 
-        if (address(config.infinityToken) < address(config.weth)) {
+        if (address(config.infinityToken) < config.weth) {
             infinityMaxAllowed = config.uniswapRouter.quote(
                 totalETH,
                 reserve2,
@@ -174,7 +174,7 @@ contract HodlerVaultSpace is Ownable {
 
         uint ethRequired;
 
-        if (address(config.infinityToken) > address(config.weth)) {
+        if (address(config.infinityToken) > config.weth) {
             ethRequired = config.uniswapRouter.quote(
                 netInfinity,
                 reserve2,
