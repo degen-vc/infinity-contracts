@@ -1,4 +1,6 @@
 API_KEY='API_KEY'
+FORNO_CELO_MAINNET='https://forno.celo.org'
+FORNO_CELO_TESTNET='https://alfajores-forno.celo-testnet.org'
 PRIVATE_KEY='KEY'
 ROUTER='ROUTER'
 UNISWAP_PAIR='PAIR'

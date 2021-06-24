@@ -2,7 +2,7 @@ require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-etherscan");
 require('dotenv').config()
 
-const {API_KEY, PRIVATE_KEY, PRIVATE_KEY_MAINNET, ETHERSCAN_API_KEY} = process.env;
+const {FORNO_CELO_MAINNET, FORNO_CELO_TESTNET, PRIVATE_KEY, ETHERSCAN_API_KEY} = process.env;
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -22,13 +22,13 @@ task("accounts", "Prints the list of accounts", async () => {
  */
 module.exports = {
   networks: {
-    kovan: {
-      url: `https://kovan.infura.io/v3/${API_KEY}`,
+    alfajores: {
+      url: FORNO_CELO_TESTNET,
       accounts: [PRIVATE_KEY]
     },
-    mainnet: {
-      url: `https://mainnet.infura.io/v3/${API_KEY}`,
-      accounts: [PRIVATE_KEY_MAINNET]
+    celo_mainnet: {
+      url: FORNO_CELO_MAINNET,
+      accounts: [PRIVATE_KEY]
     }
   },
   solidity: {
