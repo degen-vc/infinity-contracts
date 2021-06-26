@@ -6,8 +6,13 @@
   "scripts": {
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
-    "deploy:kovan": "npx hardhat run scripts/infinity-deploy.js --network kovan",
-    "powerDeploy:kovan": "npx hardhat run scripts/power-vault-deploy.js --network kovan"
+    "deploy:alfajores": "npx hardhat run scripts/infinity-deploy.js --network alfajores",
+    "deploy:alfajoresOracle": "npx hardhat run scripts/oracle-deploy.js --network alfajores",
+    "deploy:celoMainnet": "npx hardhat run scripts/infinity-deploy.js --network celo_mainnet",
+    "deploy:celoMainnetOracle": "npx hardhat run scripts/oracle-deploy.js --network celo_mainnet",
+    "deploy:celoMainnetSpace": "npx hardhat run scripts/dual-vaults-space-deploy.js --network celo_mainnet",
+    "deploy:celoPower": "npx hardhat run scripts/power-vault-deploy.js --network celo_mainnet",
+    "deploy:alfajoresPower": "npx hardhat run scripts/power-vault-deploy.js --network alfajores"
   },
   "keywords": [],
   "author": "",
