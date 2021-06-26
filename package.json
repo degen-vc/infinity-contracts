@@ -23,6 +23,7 @@
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/contracts": "^3.2.0",
     "@openzeppelin/test-helpers": "^0.5.9",
+    "@ubeswap/core": "^1.0.2",
     "@uniswap/v2-core": "^1.0.1",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "assert": "2.0.0",

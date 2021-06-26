@@ -24,7 +24,10 @@ module.exports = {
   networks: {
     alfajores: {
       url: FORNO_CELO_TESTNET,
-      accounts: [PRIVATE_KEY]
+      accounts: [PRIVATE_KEY],
+      live: true,
+      gasPrice: 0.5 * 10 ** 9,
+      gas: 8000000,
     },
     celo_mainnet: {
       url: FORNO_CELO_MAINNET,
@@ -40,8 +43,6 @@ module.exports = {
       }
     }
   },
-  gasPrice: "61000000000",
-  gas: "auto",
 
   etherscan: {
     apiKey: ETHERSCAN_API_KEY
