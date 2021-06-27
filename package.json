@@ -7,6 +7,7 @@
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
     "deploy:alfajores": "npx hardhat run scripts/infinity-deploy.js --network alfajores",
+    "deploy:celo": "npx hardhat run --network alfajores scripts/celo-deploy.js",
     "deploy:alfajoresOracle": "npx hardhat run scripts/oracle-deploy.js --network alfajores",
     "deploy:celoMainnet": "npx hardhat run scripts/infinity-deploy.js --network celo_mainnet",
     "deploy:celoMainnetOracle": "npx hardhat run scripts/oracle-deploy.js --network celo_mainnet",

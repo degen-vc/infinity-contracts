@@ -1,5 +1,7 @@
 node_modules
-.vscode
+# .vscode
+!.vscode/launch.json
+
 .env
 
 #Hardhat files
