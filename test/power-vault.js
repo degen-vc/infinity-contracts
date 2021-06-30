@@ -320,6 +320,21 @@ describe('PowerLiquidVault', function () {
     assertBNequal(lpBalanceAfter3.sub(lpBalanceBefore3), expectedLpAmount3);
   });
 
+  it('should revert if the amount is larger than ETH balance', async function() {
+    const purchaseValue = utils.parseEther('1');
+    const transferToLiquidVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
+
+    await infinity.transfer(liquidVault.address, transferToLiquidVault);
+    assertBNequal(await infinity.balanceOf(liquidVault.address), transferToLiquidVault);
+
+    await liquidVault.purchaseLP({ value: purchaseValue });
+
+    const ethBalance = await ethers.provider.getBalance(liquidVault.address);
+
+    await expect(liquidVault.buyPressure(bn(ethBalance).add('1')))
+      .to.be.revertedWith('PowerLiquidVault: ETH amount should not exceed balance.')
+  });
+
   it('should be possible change all power vault ETH to INFINITY via buyPressure', async function() {
     const purchaseValue = utils.parseEther('1');
     const transferToLiquidVault = utils.parseUnits('20000', baseUnit); // 20.000 tokens
@@ -333,7 +348,7 @@ describe('PowerLiquidVault', function () {
     assert.isTrue(ethPowerVaultBalanceBuyPressureBefore.gt(0));
     const infinityPowerVaultBalanceBuyPressureBefore = await infinity.balanceOf(liquidVault.address);
 
-    await liquidVault.buyPressure();
+    await liquidVault.buyPressure(ethPowerVaultBalanceBuyPressureBefore);
 
     const infinityPowerVaultBalanceBuyPressureAfter = await infinity.balanceOf(liquidVault.address);
     const ethPowerVaultBalanceBuyPressureAfter = await ethers.provider.getBalance(liquidVault.address);
@@ -355,7 +370,7 @@ describe('PowerLiquidVault', function () {
     assert.isTrue(ethPowerVaultBalanceBuyPressureBefore.gt(0));
     const infinityPowerVaultBalanceBuyPressureBefore = await infinity.balanceOf(liquidVault.address);
 
-    await liquidVault.connect(user).buyPressure();
+    await liquidVault.connect(user).buyPressure(ethPowerVaultBalanceBuyPressureBefore);
 
     const infinityPowerVaultBalanceBuyPressureAfter = await infinity.balanceOf(liquidVault.address);
     const ethPowerVaultBalanceBuyPressureAfter = await ethers.provider.getBalance(liquidVault.address);
@@ -373,7 +388,8 @@ describe('PowerLiquidVault', function () {
 
     await liquidVault.purchaseLP({ value: purchaseValue });
 
-    await expect(liquidVault.buyPressure())
+    const ethPowerVaultBalanceBuyPressureBefore = await ethers.provider.getBalance(liquidVault.address);
+    await expect(liquidVault.buyPressure(ethPowerVaultBalanceBuyPressureBefore))
       .to.be.revertedWith('PowerLiquidVault: ETH amount must be > 0,0001 ETH.')
   });
 
