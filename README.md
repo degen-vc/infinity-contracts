@@ -41,3 +41,17 @@ npm run test
 npm run compile
 ```
 
+# Hardhat Tasks
+- Deploy InfinityProtocol
+```
+npx hardhat deploy_infinityProtocol --router [router_address] --network [network_name]
+```
+- Deploy LiquidVault
+```
+npx hardhat deploy_liquidVault --network [network_name]
+```
+- Deploy FeeDistributor
+```
+npx hardhat deploy_liquidVault --network [network_name]
+```
+
