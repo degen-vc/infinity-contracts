@@ -1,4 +1,4 @@
-const hardhat = require('hardhat');
+// const hardhat = require('hardhat');
 const UniswapV2Factory = require("@ubeswap/core/build/metadata/UniswapV2Factory/artifact.json");
 const UniswapV2Pair = require("@ubeswap/core/build/metadata/UniswapV2Pair/artifact.json");
 require('dotenv').config();
@@ -11,8 +11,7 @@ async function main() {
   const liquidVaultShare = 60;
   const burnPercentage = 10;
 
-  await pausePromise('Deploying InfinityProtocol stone');
-  const InfinityProtocol = await hardhat.ethers.getContractFactory("InfinityProtocol");
+  const InfinityProtocol = await ethers.getContractFactory("InfinityProtocol");
   const infinityProtocol = await InfinityProtocol.deploy(ROUTER);
   await infinityProtocol.deployed();
 
@@ -26,8 +25,7 @@ async function main() {
 
   console.log("LiquidVault deployed to: ", liquidVault.address);
 
-  // Deploy LiquidVault
-  await pausePromise('Deploying FeeDistributor');
+  // Deploy FeeDistributor
   const FeeDistributor = await hardhat.ethers.getContractFactory("FeeDistributor");
   const feeDistributor = await FeeDistributor.deploy();
   await feeDistributor.deployed();
