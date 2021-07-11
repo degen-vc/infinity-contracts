@@ -9,4 +9,4 @@ cache
 artifacts
 
 #hardhat-deploy
-deployments
+/deployments
