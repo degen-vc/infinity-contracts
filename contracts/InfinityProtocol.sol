@@ -60,7 +60,7 @@ contract InfinityProtocol is IInfinityProtocol, Context, Ownable {
         return _SYMBOL;
     }
 
-    function decimals() public pure returns (uint8) {
+    function decimals() public pure override returns (uint8) {
         return _DECIMALS;
     }
 

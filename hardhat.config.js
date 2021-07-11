@@ -1,18 +1,30 @@
-require("@nomiclabs/hardhat-waffle");
-require("@nomiclabs/hardhat-etherscan");
+// Hardhat Global Imports
+const { task } = require('hardhat/config');
+require('hardhat-deploy')
+require('hardhat-deploy-ethers')
+require('@nomiclabs/hardhat-waffle');
+require('@nomiclabs/hardhat-ethers');
+require('@nomiclabs/hardhat-etherscan');
 require('dotenv').config()
 
-const {API_KEY, PRIVATE_KEY, PRIVATE_KEY_MAINNET, ETHERSCAN_API_KEY} = process.env;
+// Hardhat Tasks
+require('./tasks/deploy_infinityProtocol')
+require('./tasks/deploy_liquidVault')
+require('./tasks/deploy_feeDistributor')
+
+const {FORNO_CELO_MAINNET, FORNO_CELO_TESTNET, DEPLOYER_PRIVATE_KEY, OWNER_PRIVATE_KEY, ETHERSCAN_API_KEY, ROUTER} = process.env;
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async () => {
-  const accounts = await ethers.getSigners();
 
-  for (const account of accounts) {
-    console.log(account.address);
-  }
-});
+// task(
+//   "infinity-deploy", 
+//   "Deploys - Infinity Protocol, Reality LVault, FeeD, seeds FeeD", 
+//   ).addParam(
+//     "router", 
+//     "Uniswap / Ubeswap Router Address for Infinity Protocol").setAction(async () => {
+
+//   });
 
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
@@ -22,13 +34,16 @@ task("accounts", "Prints the list of accounts", async () => {
  */
 module.exports = {
   networks: {
-    kovan: {
-      url: `https://kovan.infura.io/v3/${API_KEY}`,
-      accounts: [PRIVATE_KEY]
+    alfajores: {
+      url: FORNO_CELO_TESTNET,
+      accounts: [DEPLOYER_PRIVATE_KEY, OWNER_PRIVATE_KEY],
+      live: true,
+      gasPrice: 0.5 * 10 ** 9,
+      gas: 8000000,
     },
-    mainnet: {
-      url: `https://mainnet.infura.io/v3/${API_KEY}`,
-      accounts: [PRIVATE_KEY_MAINNET]
+    celo_mainnet: {
+      url: FORNO_CELO_MAINNET,
+      accounts: [DEPLOYER_PRIVATE_KEY, OWNER_PRIVATE_KEY]
     }
   },
   solidity: {
@@ -40,9 +55,7 @@ module.exports = {
       }
     }
   },
-  gasPrice: "61000000000",
-  gas: "auto",
-
+  namedAccounts: { deployer: 0, tokenOwner: 1},
   etherscan: {
     apiKey: ETHERSCAN_API_KEY
   }

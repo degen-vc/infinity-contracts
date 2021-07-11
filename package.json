@@ -6,8 +6,14 @@
   "scripts": {
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
-    "deploy:kovan": "npx hardhat run scripts/infinity-deploy.js --network kovan",
-    "powerDeploy:kovan": "npx hardhat run scripts/power-vault-deploy.js --network kovan"
+    "deploy:alfajores": "npx hardhat run scripts/infinity-deploy.js --network alfajores",
+    "deploy:celo": "npx hardhat run --network alfajores scripts/celo-deploy.js",
+    "deploy:alfajoresOracle": "npx hardhat run scripts/oracle-deploy.js --network alfajores",
+    "deploy:celoMainnet": "npx hardhat run scripts/infinity-deploy.js --network celo_mainnet",
+    "deploy:celoMainnetOracle": "npx hardhat run scripts/oracle-deploy.js --network celo_mainnet",
+    "deploy:celoMainnetSpace": "npx hardhat run scripts/dual-vaults-space-deploy.js --network celo_mainnet",
+    "deploy:celoPower": "npx hardhat run scripts/power-vault-deploy.js --network celo_mainnet",
+    "deploy:alfajoresPower": "npx hardhat run scripts/power-vault-deploy.js --network alfajores"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +24,7 @@
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/contracts": "^3.2.0",
     "@openzeppelin/test-helpers": "^0.5.9",
+    "@ubeswap/core": "^1.0.2",
     "@uniswap/v2-core": "^1.0.1",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "assert": "2.0.0",
@@ -25,6 +32,8 @@
     "dotenv": "8.2.0",
     "ethereum-waffle": "^3.3.0",
     "ethers": "^5.1.0",
-    "hardhat": "^2.1.2"
+    "hardhat": "^2.1.2",
+    "hardhat-deploy": "^0.8.9",
+    "hardhat-deploy-ethers": "^0.3.0-beta.10"
   }
 }
