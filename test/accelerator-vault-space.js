@@ -13,7 +13,6 @@ describe('AcceleratorVaultSpace', function () {
 
   const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
   const liquidityETHAmount = utils.parseEther('10');
-
   const stakeDuration = 1;
   const donationShare = 10;
   const purchaseFee = 30;
@@ -153,7 +152,6 @@ describe('AcceleratorVaultSpace', function () {
     const newStakeDuration = 8;
     const newDonationShare = 20;
     const newPurchaseFee = 20;
-
     await acceleratorVault.setParameters(newStakeDuration, newDonationShare, newPurchaseFee);
     const { stakeDuration, donationShare, purchaseFee } = await acceleratorVault.config();
 
@@ -230,7 +228,6 @@ describe('AcceleratorVaultSpace', function () {
     const expectedInfinity = transferToDistributor.mul(acceleratorVaultShare + burnPercentage).div('100');
     const feeDistributorBalanceAfter = await infinity.balanceOf(feeDistributor.address);
     const feeReceiverInfinityBalanceAfter = await infinity.balanceOf(feeReceiver.address);
-
     assertBNequal(feeReceiverInfinityBalanceAfter, expectedInfinityToReceiver);
     assertBNequal(feeDistributorBalanceAfter, distributorBalance.sub(expectedInfinityToReceiver).sub(expectedInfinity));
   });

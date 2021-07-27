@@ -13,7 +13,6 @@ describe('HodlerVaultSpace', function () {
 
   const liquidityInfinityAmount = utils.parseUnits('10000', baseUnit);
   const liquidityETHAmount = utils.parseEther('10');
-
   const stakeDuration = 1;
   const donationShare = 0;
   const purchaseFee = 30;
