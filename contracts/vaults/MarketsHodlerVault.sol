@@ -6,6 +6,7 @@ import "@uniswap/v2-periphery/contracts/interfaces/IWETH.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import "../interfaces/IBEP20.sol";
+import "../interfaces/IMarketsRegistry.sol";
 
 contract MarketsHodlerVault is Ownable {
     using SafeMath for uint;
@@ -42,6 +43,7 @@ contract MarketsHodlerVault is Ownable {
 
     struct HodlerVaultConfig {
         IBEP20 infinityToken;
+        IMarketsRegistry registry;
         IUniswapV2Router02 uniswapRouter;
         IUniswapV2Pair tokenPair;
         address weth;
@@ -65,6 +67,8 @@ contract MarketsHodlerVault is Ownable {
     //Front end can loop through this and inspect if enough time has passed
     mapping(address => LPbatch[]) public lockedLP;
     mapping(address => uint) public queueCounter;
+
+    uint public constant MINIMUM_REGISTRY_RECOVER = 1e14; //0,0001 ETH minimum
 
     receive() external payable {}
 
@@ -121,12 +125,14 @@ contract MarketsHodlerVault is Ownable {
     function seed(
         uint32 duration,
         IBEP20 infinityToken,
+        IMarketsRegistry registry,
         address uniswapPair,
         address uniswapRouter,
         address payable feeReceiver,
         uint8 purchaseFee // INFINITY
     ) external onlyOwner {
         config.infinityToken = infinityToken;
+        config.registry = registry;
         config.uniswapRouter = IUniswapV2Router02(uniswapRouter);
         config.tokenPair = IUniswapV2Pair(uniswapPair);
         config.weth = config.uniswapRouter.WETH();
@@ -162,10 +168,21 @@ contract MarketsHodlerVault is Ownable {
         config.feeReceiver = feeReceiver;
     }
 
+    function registryRecover() public {
+        uint wethRegistryBalance = IBEP20(config.weth).balanceOf(address(config.registry));
+
+        if (wethRegistryBalance >= MINIMUM_REGISTRY_RECOVER) {
+            config.registry.recoverTokens(IBEP20(config.weth), address(this));
+            IWETH(config.weth).withdraw(IBEP20(config.weth).balanceOf(address(this)));
+        }
+    }
+
     function purchaseLP(uint amount) external lock {
         require(amount > 0, "MarketsHodlerVault: INFINITY required to mint LP");
         require(config.infinityToken.balanceOf(msg.sender) >= amount, "MarketsHodlerVault: Not enough INFINITY tokens");
         require(config.infinityToken.allowance(msg.sender, address(this)) >= amount, "MarketsHodlerVault: Not enough INFINITY tokens allowance");
+
+        registryRecover();
 
         uint infinityFee = amount.mul(config.purchaseFee).div(100);
         uint netInfinity = amount.sub(infinityFee);
